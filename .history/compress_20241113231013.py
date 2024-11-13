@@ -1,6 +1,7 @@
 import json
 root = "./result/"
 # 按块存储
+
 def compress_block(dict_list, block=4):
     dict_string = ""
     # 生成词项字符串
@@ -39,22 +40,12 @@ def compress_encode(doc_ids) -> bytes:
 if __name__ == "__main__":
     with open(root + "book_reverted_dict.json", "r", encoding="UTF-8") as f:
         revert_dict = json.load(f)
-    with open(root + "book_compressed_revert_dict.bin", "wb") as f:
+    with open(root + "compressed_revert_dict.bin", "wb") as f:
         for key in revert_dict:
             f.write(compress_encode(list(revert_dict[key])))
         dict_list = [list(revert_dict[key]) for key in revert_dict]
     dict_ptr, dict_string = compress_block(dict_list, 4)
-    with open(root + 'book_block_compressed.json', "w") as f:
-        f.write(dict_string)
-    
-    with open(root + "movie_reverted_dict.json", "r", encoding="UTF-8") as f:
-        revert_dict = json.load(f)
-    with open(root + "movie_compressed_revert_dict.bin", "wb") as f:
-        for key in revert_dict:
-            f.write(compress_encode(list(revert_dict[key])))
-        dict_list = [list(revert_dict[key]) for key in revert_dict]
-    dict_ptr, dict_string = compress_block(dict_list, 4)
-    with open(root + 'movie_block_compressed.json', "w") as f:
+    with open(root + 'block_compressed.json', "w") as f:
         f.write(dict_string)
     
 

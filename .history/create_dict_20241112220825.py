@@ -64,27 +64,27 @@ class SkipRevertList(RevertDict):
 if __name__ == "__main__":
     # TODO 更改路径
     # book
-    with open(r"./result/book_keyword.json","r",encoding="UTF-8") as fin:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_keyword.json","r",encoding="UTF-8") as fin:
         participle_dict1 = json.load(fin)
     skip1 = SkipRevertList(participle_dict1)
     skip1._create_skip_structure()
     # 输出倒排表，倒排表路径
-    with open(r"./result/book_reverted_dict.json","w",encoding="UTF-8") as fout_reverted_dict:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_reverted_dict.json","w",encoding="UTF-8") as fout_reverted_dict:
        json.dump(skip1.reverted_dict,fout_reverted_dict, indent=4, ensure_ascii=False)
     # # 输出跳表，跳表路径
-    with open(r"./result/book_skip_dict.json","w",encoding="UTF-8") as fout_skip_dict:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_skip_dict.json","w",encoding="UTF-8") as fout_skip_dict:
        json.dump(skip1.skip_dict,fout_skip_dict, indent=4, ensure_ascii=False)
 
     # movie
-    with open(r"./result/book_keyword.json","r",encoding="UTF-8") as fin:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_keyword.json","r",encoding="UTF-8") as fin:
         participle_dict2 = json.load(fin)
     skip2 = SkipRevertList(participle_dict2)
     skip2._create_skip_structure()
     # 输出倒排表，倒排表路径
-    with open(r"./result/movie_reverted_dict.json","w",encoding="UTF-8") as fout_reverted_dict:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_reverted_dict.json","w",encoding="UTF-8") as fout_reverted_dict:
        json.dump(skip2.reverted_dict,fout_reverted_dict, indent=4, ensure_ascii=False)
     # 输出跳表，跳表路径
-    with open(r"./result/movie_skip_dict.json","w",encoding="UTF-8") as fout_skip_dict:
+    with open(r"C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\result\book_skip_dict.json","w",encoding="UTF-8") as fout_skip_dict:
        json.dump(skip2.skip_dict,fout_skip_dict, indent=4, ensure_ascii=False)
 
     # 输出调试

@@ -45,9 +45,9 @@ class Split:
         for word in seg_list:#去除停用词
             if word not in self.stop_word_list:
                 extracted_word.append(word)
-        print(extracted_word)
-        print('开始合并近义词')
-        model = SentenceTransformer("C:\\Users\\lenovo\\Downloads\\paraphrase-multilingual-MiniLM-L12-v2")
+        # print(extracted_word)
+        # print('开始合并近义词')
+        model = SentenceTransformer("C:\WebInfo\paraphrase-MiniLM-L12-v2")
         # list1 = []
         # list2 = []
         for i in range(len(extracted_word)):#合并近义词
@@ -65,7 +65,7 @@ class Split:
                         extracted_word[j] = ' '
                 # list1.clear()
                 # list2.clear()
-        print(self.single_id_info)
+        # print(self.single_id_info)
         return self.single_id_info
 
     def combine_single_info(self, info: dict) -> Dict:

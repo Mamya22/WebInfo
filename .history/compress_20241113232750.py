@@ -1,6 +1,7 @@
 import json
 root = "./result/"
 # 按块存储
+
 def compress_block(dict_list, block=4):
     dict_string = ""
     # 生成词项字符串

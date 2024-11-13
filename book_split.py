@@ -15,3 +15,4 @@ if __name__ == "__main__":
         book_test.single_id_info.append(info['Tags'])
         book_test.combine_single_info(info)
     book_test.save_keyword_to_json()
+    print("done")

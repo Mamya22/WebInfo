@@ -15,3 +15,4 @@ if __name__ == "__main__":
         movie_test.single_id_info.append(info['Tags'])
         movie_test.combine_single_info(info)
     movie_test.save_keyword_to_json()
+    print("done")
