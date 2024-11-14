@@ -466,27 +466,3 @@ def start_tkinter(BoolMatch):
 if __name__ == "__main__":
     bm = BooleanMatch()
     start_tkinter(bm)
-
-
-    # while True:
-    #     while True:
-    #         user_mode = input(Fore.BLACK +
-    #                           "Please input which mode you'll search: " + Fore.GREEN + "book / movie? ")
-    #         if user_mode == 'book' or user_mode == 'movie':
-    #             break
-    #         else:
-    #             print(Fore.RED + "Some error! Please be care that you can only choose 'book' or 'movie'!")
-
-    #     user_query = input(Fore.BLACK + "Please input the sequence you'll search: ")
-
-    #     error = bm.Search(user_query, user_mode)
-
-    #     if error:
-    #         next_choice = input(Fore.BLACK + "Maybe search for something else?" + Fore.GREEN + "[Y/n] ")
-    #     else:
-    #         next_choice = input(Fore.BLACK + "Continue?" + Fore.GREEN + "[Y/n] ")
-
-    #     if next_choice == 'n':
-    #         print(
-    #             Fore.BLUE + "Thank you for using this searching engine! Welcome your next travel!")
-    #         break
