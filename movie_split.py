@@ -11,8 +11,7 @@ if __name__ == "__main__":
     movie_test.get_stop_word_list()
 
     for info in movie_test.info:
-        movie_test.split_info(info['Tags'])
+        movie_test.split_info(info['Tags'],"jieba")
         movie_test.single_id_info.append(info['Tags'])
         movie_test.combine_single_info(info)
     movie_test.save_keyword_to_json()
-    print("done")
