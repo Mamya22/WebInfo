@@ -95,10 +95,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The book you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.BLACK,show_tag)
+            # print(Fore.GREEN,"Success! The book you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.BLACK,show_tag)
         else:
             # movie类型检索
             show_tag = self.movie_keyword.get(str_id)
@@ -107,10 +107,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The movie you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.Green,show_tag)
+            # print(Fore.GREEN,"Success! The movie you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.Green,show_tag)
         
     def SplitQuery(self) -> List:
         # 划分查询语句
@@ -258,10 +258,10 @@ class BooleanMatch:
                 return self.NOT(self.LogicOperation(ret[first_not_index + 1:]))
         else:
             if not self.error and len(ret) == 0:
-                status_window.update_result("Lack of some parameters")
+                status_window.update_status("Lack of some parameters")
                 self.error = True
             elif not self.error and len(ret) > 1:
-                status_window.update_result("There are some unexpected parameters")
+                status_window.update_status("There are some unexpected parameters")
                 self.error = True
             if not self.error:
                 return ret[0]
@@ -275,7 +275,7 @@ class BooleanMatch:
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
         if not L1_id_list or not L2_id_list:
-            status_window.update_result("The operand 'OR' lacks parameter!")
+            status_window.update_status("The operand 'OR' lacks parameter!")
             self.error = True
         else:
             index1 = 0

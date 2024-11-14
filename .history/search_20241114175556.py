@@ -95,10 +95,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The book you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.BLACK,show_tag)
+            # print(Fore.GREEN,"Success! The book you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.BLACK,show_tag)
         else:
             # movie类型检索
             show_tag = self.movie_keyword.get(str_id)
@@ -107,10 +107,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The movie you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.Green,show_tag)
+            # print(Fore.GREEN,"Success! The movie you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.Green,show_tag)
         
     def SplitQuery(self) -> List:
         # 划分查询语句

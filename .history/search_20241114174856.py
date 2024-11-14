@@ -95,10 +95,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The book you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.BLACK,show_tag)
+            # print(Fore.GREEN,"Success! The book you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.BLACK,show_tag)
         else:
             # movie类型检索
             show_tag = self.movie_keyword.get(str_id)
@@ -107,10 +107,10 @@ class BooleanMatch:
             status_window.update_result("Tag: ")
             for tag in show_tag:
                 status_window.update_result(tag)
-            print(Fore.GREEN,"Success! The movie you want is here!")
-            print(Fore.BLACK,"ID:   ",_id)
-            print(Fore.GREEN,"Tag: ")
-            print(Fore.Green,show_tag)
+            # print(Fore.GREEN,"Success! The movie you want is here!")
+            # print(Fore.BLACK,"ID:   ",_id)
+            # print(Fore.GREEN,"Tag: ")
+            # print(Fore.Green,show_tag)
         
     def SplitQuery(self) -> List:
         # 划分查询语句
@@ -130,7 +130,7 @@ class BooleanMatch:
         flag = 0
         while i < len(self.query_list) and not self.error:
             if flag < 0:
-                status_window.update_result("The right bracket overabundant!")
+                status_window.update_status("The right bracket overabundant!")
                 self.error = True
             elif self.query_list[i] == ')':
                 if flag == 0:
@@ -140,7 +140,7 @@ class BooleanMatch:
             elif self.query_list[i] == '(':
                 flag += 1
             i += 1
-        status_window.update_result("Lack of right bracket!")
+        status_window.update_status("Lack of right bracket!")
         self.error = True
         return -1
     
@@ -168,7 +168,7 @@ class BooleanMatch:
         self.mode = modes
         self.query_list = self.SplitQuery()
         if self.error:
-            status_window.update_result("Sorry! But there are some errors in your query.")
+            status_window.update_status("Sorry! But there are some errors in your query.")
             return []
         if self.mode == 'book':
             status_window.update_status("You are searching for books.")
@@ -186,7 +186,7 @@ class BooleanMatch:
         
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
-            status_window.update_result("Sorry! But there are no results you want here.")
+            status_window.update_status("Sorry! But there are no results you want here.")
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
             for _id in ret:
@@ -258,10 +258,10 @@ class BooleanMatch:
                 return self.NOT(self.LogicOperation(ret[first_not_index + 1:]))
         else:
             if not self.error and len(ret) == 0:
-                status_window.update_result("Lack of some parameters")
+                status_window.update_status("Lack of some parameters")
                 self.error = True
             elif not self.error and len(ret) > 1:
-                status_window.update_result("There are some unexpected parameters")
+                status_window.update_status("There are some unexpected parameters")
                 self.error = True
             if not self.error:
                 return ret[0]
@@ -275,7 +275,7 @@ class BooleanMatch:
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
         if not L1_id_list or not L2_id_list:
-            status_window.update_result("The operand 'OR' lacks parameter!")
+            status_window.update_status("The operand 'OR' lacks parameter!")
             self.error = True
         else:
             index1 = 0
@@ -426,42 +426,41 @@ class BooleanMatch:
         return self.AND_NOT(self.pre_sort_ids, T)
 
 def start_tkinter(BoolMatch):
-    bm = BoolMatch
-    def search():
-        user_mode = mode_var.get()
-        user_query = query_entry.get()
-        error = bm.Search(user_query, user_mode)
-        print(user_query)
-        if error:
-            result_label.config(text="Some error occurred in your query.", fg="red")
-        else:
-            result_label.config(text="Search completed.", fg="green")
+        bm = BoolMatch
+        def search():
+            user_mode = mode_var.get()
+            user_query = query_entry.get()
+            error = bm.Search(user_query, user_mode)
+            if error:
+                result_label.config(text="Some error occurred in your query.", fg="red")
+            else:
+                result_label.config(text="Search completed.", fg="green")
 
-    root = tk.Tk()
-    root.title("Boolean Match System")
-    root.geometry("1000x500")
+        root = tk.Tk()
+        root.title("Boolean Match System")
+        root.geometry("1000x500")
 
-    mode_var = tk.StringVar(value="book")
-    tk.Label(root, text="Select mode:",font=("Arival",30)).pack()
-    tk.Radiobutton(root, text="Book", variable=mode_var, value="book",font=("Arival",30)).pack()
-    tk.Radiobutton(root, text="Movie", variable=mode_var, value="movie",font=("Arival",30)).pack()
+        mode_var = tk.StringVar(value="book")
+        tk.Label(root, text="Select mode:",font=("Arival",30)).pack()
+        tk.Radiobutton(root, text="Book", variable=mode_var, value="book",font=("Arival",30)).pack()
+        tk.Radiobutton(root, text="Movie", variable=mode_var, value="movie",font=("Arival",30)).pack()
 
-    tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
-    query_entry = tk.Entry(root, width=100,font=("Arival",30))
-    query_entry.pack()
+        tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
+        query_entry = tk.Entry(root, width=100,font=("Arival",30))
+        query_entry.pack()
 
-    search_button = tk.Button(root, text="Search",font=("Arival",30))
-    search_button.pack()
+        search_button = tk.Button(root, text="Search",font=("Arival",30))
+        search_button.pack()
 
-    result_label = tk.Label(root, text="")
-    result_label.pack()
+        result_label = tk.Label(root, text="")
+        result_label.pack()
 
-    search_button.config(command=search)
+        search_button.config(command=search)
 
-    results_text = tk.Text(root, height=20, width=100, font=("Arial", 20))
-    results_text.pack()
-    root.mainloop()
-
+        results_text = tk.Text(root, height=20, width=100, font=("Arial", 20))
+        results_text.pack()
+        root.mainloop()
+    
 
 if __name__ == "__main__":
     bm = BooleanMatch()

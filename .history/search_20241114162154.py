@@ -1,49 +1,6 @@
 import json
 from typing import AnyStr, Dict, List, Tuple
 from colorama import Fore, Style
-import tkinter as tk
-
-class StatusWindow:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Status & Output Window")
-        self.root.geometry("1000x2000")
-
-        # 状态标签和文本框
-        self.status_label = tk.Label(self.root, text="Status", font=("Arial", 20))
-        self.status_label.pack(pady=10)
-        self.status_text = tk.Text(self.root, height=10, width=100)
-        self.status_text.pack(pady=10)
-
-        # 结果标签和文本框
-        self.result_label = tk.Label(self.root, text="Result", font=("Arial", 20))
-        self.result_label.pack(pady=10)
-        self.result_text = tk.Text(self.root, height=500, width=100)
-        self.result_text.pack(pady=10)
-
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.closed = False
-
-    def on_closing(self):
-        self.closed = True
-        self.root.destroy()
-
-    def update_status(self, message: str):
-        if not self.closed:
-            self.status_text.insert(tk.END, message + "\n")
-            self.status_text.see(tk.END)
-            self.root.update_idletasks()
-            self.root.update()
-
-    def update_result(self, message: str):
-        if not self.closed:
-            self.result_text.insert(tk.END, message + "\n")
-            self.result_text.see(tk.END)
-            self.root.update_idletasks()
-            self.root.update()
-    
-
-status_window = StatusWindow()
 
 class BooleanMatch:
     def __init__(self):
@@ -57,8 +14,9 @@ class BooleanMatch:
         self.skip_dict = {} # 跳表
         self.pre_sort_list = [] # 预排序列表
 
-        status_window.update_status("Welcome to Boolean Match System!")
-        status_window.update_status("Please wait for initialization...")
+        print(Fore.GREEN + "Boolean Match System" + Style.RESET_ALL)
+        print("Welcome to Boolean Match System!")
+        print("Please wait for initialization...")
 
         self.book_keyword_path = "./result/book_keyword.json"
         self.movie_keyword_path = "./result/movie_keyword.json"
@@ -82,19 +40,14 @@ class BooleanMatch:
             self.book_skip_list = json.load(f)
         with open(self.movie_skip_list_path, "r", encoding="UTF-8") as f:
             self.movie_skip_list = json.load(f)
-        status_window.update_status("Initialization Completed! Start your travel")
-
+        print(Fore.GREEN + "Initialization Completed! Start your travel" + Style.RESET_ALL)
+ 
     # 输出详细信息
     def print_message(self,_id: int):
         str_id = str(_id)
         if(self.mode == 'book'):
             # book类型检索
             show_tag = self.book_keyword.get(str_id)
-            status_window.update_result("Success! The book you want is here!")
-            status_window.update_result("ID:   "+str_id)
-            status_window.update_result("Tag: ")
-            for tag in show_tag:
-                status_window.update_result(tag)
             print(Fore.GREEN,"Success! The book you want is here!")
             print(Fore.BLACK,"ID:   ",_id)
             print(Fore.GREEN,"Tag: ")
@@ -102,11 +55,6 @@ class BooleanMatch:
         else:
             # movie类型检索
             show_tag = self.movie_keyword.get(str_id)
-            status_window.update_result("Success! The movie you want is here!")
-            status_window.update_result("ID:   "+str_id)
-            status_window.update_result("Tag: ")
-            for tag in show_tag:
-                status_window.update_result(tag)
             print(Fore.GREEN,"Success! The movie you want is here!")
             print(Fore.BLACK,"ID:   ",_id)
             print(Fore.GREEN,"Tag: ")
@@ -121,7 +69,7 @@ class BooleanMatch:
         self.query = self.query.replace('AND', ' AND ').replace('OR', ' OR ').replace('NOT', ' NOT ')
         self.query = self.query.replace('和', ' AND ').replace('且', ' OR ').replace('非', ' NOT ')
         self.query = self.query.replace('&', ' AND ').replace('|', ' OR ').replace('！', ' NOT ').replace('!', ' NOT ')
-        status_window.update_status("Success! The query is: " + self.query)
+        print("Success! The query is: ", self.query)
         return self.query.split() # 用空格划分
     
     def FindCorrespondBracket(self, index: int) -> int:
@@ -130,7 +78,7 @@ class BooleanMatch:
         flag = 0
         while i < len(self.query_list) and not self.error:
             if flag < 0:
-                status_window.update_result("The right bracket overabundant!")
+                print("The right bracket overabundant!")
                 self.error = True
             elif self.query_list[i] == ')':
                 if flag == 0:
@@ -140,43 +88,25 @@ class BooleanMatch:
             elif self.query_list[i] == '(':
                 flag += 1
             i += 1
-        status_window.update_result("Lack of right bracket!")
+        print("Lack of right bracket!")
         self.error = True
         return -1
-    
-    def CreateSkipList(self, id_list: List) -> Dict:
-        if len(id_list) == 0:
-            self.error = True
-            return []
-        if not self.error:
-            # 没有出错
-            interval = int(len(id_list) ** 0.5) # 根号L为间隔
-            # 确保跳表间隔至少为1
-            skip_list = [[id_list[0]], 0 if len(id_list) == 1 else interval, 0]
-            for i in range(interval, len(id_list)-interval, interval):
-                # 以间隔为步长，遍历
-                skip_list.append([id_list[i], i + interval, i])
-            nail = len(skip_list) * interval
-            if nail < len(id_list) - 1:
-                # 处理结尾
-                skip_list.append([id_list[nail], len(id_list)-1, nail])
-            return skip_list
-
+        
     def Search(self, query:AnyStr, modes:AnyStr) -> List:
-        status_window.update_status("Begin Searching...")
+        print("Begin Searching...")
         self.query = query
         self.mode = modes
         self.query_list = self.SplitQuery()
         if self.error:
-            status_window.update_result("Sorry! But there are some errors in your query.")
+            print(Fore.RED + "Sorry! But there are some errors in your query.")
             return []
         if self.mode == 'book':
-            status_window.update_status("You are searching for books.")
+            print(Fore.GREEN + "You are searching for books.")
             self.keyword = self.book_keyword
             self.reverted_dict = self.book_reverted_dict
             self.skip_dict = self.book_skip_list
         else:
-            status_window.update_status("You are searching for movies.")
+            print(Fore.GREEN + "You are searching for movies.")
             self.keyword = self.movie_keyword
             self.reverted_dict = self.movie_reverted_dict
             self.skip_dict = self.movie_skip_list
@@ -186,19 +116,19 @@ class BooleanMatch:
         
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
-            status_window.update_result("Sorry! But there are no results you want here.")
+            print(Fore.RED + "Sorry! But there are no results you want here.")
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
+            print(Fore.BLUE + '*' * 50)
             for _id in ret:
-                status_window.update_result("Success! The ID you want is here!")
                 self.print_message(_id)
-            
+            print(Fore.BLUE + '*' * 50)
         
         return self.error
 
     def BracketOperation(self, query_list: List) -> Tuple:
         # 处理括号表达式
-        status_window.update_status("Begin Bracket Operation...")
+        print("Begin Bracket Operation...")
         if not query_list:
             return [], []
         ret = []
@@ -258,10 +188,10 @@ class BooleanMatch:
                 return self.NOT(self.LogicOperation(ret[first_not_index + 1:]))
         else:
             if not self.error and len(ret) == 0:
-                status_window.update_result("Lack of some parameters")
+                print(Fore.RED + "Lack of some parameters")
                 self.error = True
             elif not self.error and len(ret) > 1:
-                status_window.update_result("There are some unexpected parameters")
+                print(Fore.RED + "There are some unexpected parameters")
                 self.error = True
             if not self.error:
                 return ret[0]
@@ -275,7 +205,7 @@ class BooleanMatch:
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
         if not L1_id_list or not L2_id_list:
-            status_window.update_result("The operand 'OR' lacks parameter!")
+            print(Fore.RED + "The operand 'OR' lacks parameter!")
             self.error = True
         else:
             index1 = 0
@@ -335,7 +265,7 @@ class BooleanMatch:
         L2_id_list = T2[0]
         L2_skip_list = T2[1]
         if not L1_id_list or not L2_id_list:
-            status_window.update_status("The operand 'AND' lacks parameter!")
+            print(Fore.RED + "The operand 'AND' lacks parameter!")
             self.error = True
         if not self.error:
             index1 = 0
@@ -377,7 +307,7 @@ class BooleanMatch:
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
         if not L1_id_list or not L2_id_list:
-            status_window.update_status(Fore.RED + "The operand 'NOT' lacks parameter!")
+            print(Fore.RED + "The operand 'NOT' lacks parameter!")
             self.error = True
         else:
             index1 = 0
@@ -425,68 +355,31 @@ class BooleanMatch:
     def NOT(self, T: Tuple) -> Tuple:
         return self.AND_NOT(self.pre_sort_ids, T)
 
-def start_tkinter(BoolMatch):
-    bm = BoolMatch
-    def search():
-        user_mode = mode_var.get()
-        user_query = query_entry.get()
-        error = bm.Search(user_query, user_mode)
-        print(user_query)
-        if error:
-            result_label.config(text="Some error occurred in your query.", fg="red")
-        else:
-            result_label.config(text="Search completed.", fg="green")
-
-    root = tk.Tk()
-    root.title("Boolean Match System")
-    root.geometry("1000x500")
-
-    mode_var = tk.StringVar(value="book")
-    tk.Label(root, text="Select mode:",font=("Arival",30)).pack()
-    tk.Radiobutton(root, text="Book", variable=mode_var, value="book",font=("Arival",30)).pack()
-    tk.Radiobutton(root, text="Movie", variable=mode_var, value="movie",font=("Arival",30)).pack()
-
-    tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
-    query_entry = tk.Entry(root, width=100,font=("Arival",30))
-    query_entry.pack()
-
-    search_button = tk.Button(root, text="Search",font=("Arival",30))
-    search_button.pack()
-
-    result_label = tk.Label(root, text="")
-    result_label.pack()
-
-    search_button.config(command=search)
-
-    results_text = tk.Text(root, height=20, width=100, font=("Arial", 20))
-    results_text.pack()
-    root.mainloop()
-
+    
 
 if __name__ == "__main__":
     bm = BooleanMatch()
-    start_tkinter(bm)
+    # print(bm.book_reverted_dict)
+    # print(bm.movie_reverted_dict)
+    while True:
+        while True:
+            user_mode = input(Fore.BLACK +
+                              "Please input which mode you'll search: " + Fore.GREEN + "book / movie? ")
+            if user_mode == 'book' or user_mode == 'movie':
+                break
+            else:
+                print(Fore.RED + "Some error! Please be care that you can only choose 'book' or 'movie'!")
 
+        user_query = input(Fore.BLACK + "Please input the sequence you'll search: ")
 
-    # while True:
-    #     while True:
-    #         user_mode = input(Fore.BLACK +
-    #                           "Please input which mode you'll search: " + Fore.GREEN + "book / movie? ")
-    #         if user_mode == 'book' or user_mode == 'movie':
-    #             break
-    #         else:
-    #             print(Fore.RED + "Some error! Please be care that you can only choose 'book' or 'movie'!")
+        error = bm.Search(user_query, user_mode)
 
-    #     user_query = input(Fore.BLACK + "Please input the sequence you'll search: ")
+        if error:
+            next_choice = input(Fore.BLACK + "Maybe search for something else?" + Fore.GREEN + "[Y/n] ")
+        else:
+            next_choice = input(Fore.BLACK + "Continue?" + Fore.GREEN + "[Y/n] ")
 
-    #     error = bm.Search(user_query, user_mode)
-
-    #     if error:
-    #         next_choice = input(Fore.BLACK + "Maybe search for something else?" + Fore.GREEN + "[Y/n] ")
-    #     else:
-    #         next_choice = input(Fore.BLACK + "Continue?" + Fore.GREEN + "[Y/n] ")
-
-    #     if next_choice == 'n':
-    #         print(
-    #             Fore.BLUE + "Thank you for using this searching engine! Welcome your next travel!")
-    #         break
+        if next_choice == 'n':
+            print(
+                Fore.BLUE + "Thank you for using this searching engine! Welcome your next travel!")
+            break
