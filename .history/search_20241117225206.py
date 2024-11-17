@@ -182,7 +182,6 @@ class BooleanMatch:
         self.query_list = self.SplitQuery()
         if self.error:
             status_window.update_result("Sorry! But there are some errors in your query.")
-            self.error = False
             return []
         if self.mode == 'book':
             status_window.update_status("You are searching for books.")
@@ -194,15 +193,13 @@ class BooleanMatch:
             self.keyword = self.movie_keyword
             self.reverted_dict = self.movie_reverted_dict
             self.skip_dict = self.movie_skip_list
-        pre_sort_id_list = list(self.keyword.keys())
-        # print(pre_sort_id_list)
+        pre_sort_id_list = list(self.keyword.id())
         pre_sort_id_list.sort() # 对ID进行排序
         self.pre_sort_ids = (pre_sort_id_list, self.CreateSkipList(pre_sort_id_list))
         
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
             status_window.update_result("Sorry! But there are no results you want here.")
-            self.error = False
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
             for _id in ret:
@@ -419,7 +416,7 @@ class BooleanMatch:
         L2_id_list = T2[0]
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
-
+        
         if not L1_id_list or not L2_id_list:
             status_window.update_status(Fore.RED + "The operand 'NOT' lacks parameter!")
             self.error = True
@@ -430,77 +427,46 @@ class BooleanMatch:
             len_2 = len(L2_id_list)
             interval_1 = int((len(L1_id_list)) ** 0.5)
             interval_2 = int((len(L2_id_list)) ** 0.5)
-
-            while index1 < len_1 and index2 < len_2:
+            
+            while index1 < len(L1_id_list) and index2 < len(L2_id_list):
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
-                    skip_index1 = index1 // interval_1
-
-                    if (skip_index1 in L1_skip_list and
-                        index1 < len_1 and index2 < len_2 and
+                    if (index1 // interval_1 in L1_skip_list and
                         L1_id_list[index1] == L2_id_list[index2] and
-                        skip_index1 < len(L1_skip_list) and
-                        L1_skip_list[skip_index1][1] < len_1 and
-                        L1_id_list[L1_skip_list[skip_index1][1]] == L2_id_list[index2]):
-
+                        L1_id_list[L1_skip_list[index1 // interval_1][1]] == L2_id_list[index2]):
+                        
                         index1 += interval_1
                         index2 += 1
-
-                    elif (skip_index1 in L1_skip_list and
-                        index1 < len_1 and index2 < len_2 and
-                        int(L1_id_list[index1]) < int(L2_id_list[index2]) and
-                        skip_index1 < len(L1_skip_list) and
-                        L1_skip_list[skip_index1][1] < len_1 and
-                        L1_id_list[L1_skip_list[skip_index1][1]] < L2_id_list[index2]):
-
+                    elif (index1 // interval_1 in L1_skip_list and
+                        L1_id_list[index1] < L2_id_list[index2] and
+                        L1_id_list[L1_skip_list[index1 // interval_1][1]] < L2_id_list[index2]):
+                        
                         index1 += interval_1
-
                     else:
                         break
 
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
-                    skip_index2 = index2 // interval_2
-
-                    if (skip_index2 in L2_skip_list and
-                        index1 < len_1 and index2 < len_2 and
+                    if (index2 // interval_2 in L2_skip_list and
                         L2_id_list[index2] == L1_id_list[index1] and
-                        skip_index2 < len(L2_skip_list) and
-                        L2_skip_list[skip_index2][1] < len_2 and
-                        L2_id_list[L2_skip_list[skip_index2][1]] == L1_id_list[index1]):
-
+                        L2_id_list[L2_skip_list[index2 // interval_2][1]] == L1_id_list[index1]):
+                        
                         index2 += interval_2
                         index1 += 1
-
-                    elif (skip_index2 in L2_skip_list and
-                        index2 < len_2 and index1 < len_1 and
-                        int(L2_id_list[index2]) < int(L1_id_list[index1]) and
-                        skip_index2 < len(L2_skip_list) and
-                        L2_skip_list[skip_index2][1] < len_2 and
-                        L2_id_list[L2_skip_list[skip_index2][1]] < L1_id_list[index1]):
-
+                    elif (index2 // interval_2 in L2_skip_list and
+                        L2_id_list[index2] < L1_id_list[index1] and
+                        L2_id_list[L2_skip_list[index2 // interval_2][1]] < L1_id_list[index1]):
+                        
                         index2 += interval_2
-
                     else:
                         break
 
                 # Compare elements at index1 and index2
                 if index1 < len_1 and index2 < len_2:
-                    try:
-                        val1 = int(L1_id_list[index1])
-                        val2 = int(L2_id_list[index2])
-                    except ValueError:
-                        print(f"Skipping invalid comparison: {L1_id_list[index1]}, {L2_id_list[index2]}")
-                        if isinstance(L1_id_list[index1], str):
-                            index1 += 1
-                        if isinstance(L2_id_list[index2], str):
-                            index2 += 1
-                        continue
-
-                    if val1 == val2:
+                    if L1_id_list[index1] == L2_id_list[index2]:
                         index1 += 1
                         index2 += 1
-                    elif val1 < val2:
+                    elif L1_id_list[index1] < L2_id_list[index2]:
                         ret.append(L1_id_list[index1])
                         index1 += 1
                     else:
@@ -512,23 +478,16 @@ class BooleanMatch:
 
         return ret, self.CreateSkipList(ret)
 
+
     def NOT(self, T: Tuple) -> Tuple:
         return self.AND_NOT(self.pre_sort_ids, T)
 
-def start_tkinter():
-    bm = BooleanMatch()
+def start_tkinter(BoolMatch):
+    bm = BoolMatch
     def search():
         status_window.clear_status()
         status_window.clear_result()
-        user_mode = mode_entry.get()
-        if(user_mode != '1' and user_mode != '2'):
-            result_label.config(text="Invalid mode.", fg="red")
-            return
-        if(user_mode == '1'):
-            user_mode = 'movie'
-        else:
-            user_mode = 'book'
-        print(user_mode)
+        user_mode = mode_var.get()
         user_query = query_entry.get()
         error = bm.Search(user_query, user_mode)
         print(user_query)
@@ -541,9 +500,10 @@ def start_tkinter():
     root.title("Boolean Match System")
     root.geometry("1000x500")
 
-    tk.Label(root, text="Enter mode(movie——1/book——2):",font=("Arival",30)).pack()
-    mode_entry = tk.Entry(root, width=100,font=("Arival",30))
-    mode_entry.pack()
+    mode_var = tk.StringVar(value="book")
+    tk.Label(root, text="Select mode:",font=("Arival",30)).pack()
+    tk.Radiobutton(root, text="Book", variable=mode_var, value="book",font=("Arival",30)).pack()
+    tk.Radiobutton(root, text="Movie", variable=mode_var, value="movie",font=("Arival",30)).pack()
 
     tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
     query_entry = tk.Entry(root, width=100,font=("Arival",30))
@@ -563,4 +523,5 @@ def start_tkinter():
 
 
 if __name__ == "__main__":
-    start_tkinter()
+    bm = BooleanMatch()
+    start_tkinter(bm)

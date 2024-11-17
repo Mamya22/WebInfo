@@ -202,7 +202,6 @@ class BooleanMatch:
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
             status_window.update_result("Sorry! But there are no results you want here.")
-            self.error = False
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
             for _id in ret:

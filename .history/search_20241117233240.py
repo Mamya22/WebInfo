@@ -182,7 +182,6 @@ class BooleanMatch:
         self.query_list = self.SplitQuery()
         if self.error:
             status_window.update_result("Sorry! But there are some errors in your query.")
-            self.error = False
             return []
         if self.mode == 'book':
             status_window.update_status("You are searching for books.")
@@ -202,7 +201,6 @@ class BooleanMatch:
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
             status_window.update_result("Sorry! But there are no results you want here.")
-            self.error = False
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
             for _id in ret:
@@ -524,10 +522,6 @@ def start_tkinter():
         if(user_mode != '1' and user_mode != '2'):
             result_label.config(text="Invalid mode.", fg="red")
             return
-        if(user_mode == '1'):
-            user_mode = 'movie'
-        else:
-            user_mode = 'book'
         print(user_mode)
         user_query = query_entry.get()
         error = bm.Search(user_query, user_mode)

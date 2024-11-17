@@ -182,7 +182,6 @@ class BooleanMatch:
         self.query_list = self.SplitQuery()
         if self.error:
             status_window.update_result("Sorry! But there are some errors in your query.")
-            self.error = False
             return []
         if self.mode == 'book':
             status_window.update_status("You are searching for books.")
@@ -202,7 +201,6 @@ class BooleanMatch:
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         if len(ret) == 0:
             status_window.update_result("Sorry! But there are no results you want here.")
-            self.error = False
             # not find doesn't mean error, but doesn't need to output
         elif not self.error:
             for _id in ret:
@@ -518,16 +516,7 @@ class BooleanMatch:
 def start_tkinter():
     bm = BooleanMatch()
     def search():
-        status_window.clear_status()
-        status_window.clear_result()
-        user_mode = mode_entry.get()
-        if(user_mode != '1' and user_mode != '2'):
-            result_label.config(text="Invalid mode.", fg="red")
-            return
-        if(user_mode == '1'):
-            user_mode = 'movie'
-        else:
-            user_mode = 'book'
+        user_mode = mode_var.get()
         print(user_mode)
         user_query = query_entry.get()
         error = bm.Search(user_query, user_mode)
@@ -541,9 +530,10 @@ def start_tkinter():
     root.title("Boolean Match System")
     root.geometry("1000x500")
 
-    tk.Label(root, text="Enter mode(movie——1/book——2):",font=("Arival",30)).pack()
-    mode_entry = tk.Entry(root, width=100,font=("Arival",30))
-    mode_entry.pack()
+    mode_var = tk.StringVar(value="book")
+    tk.Label(root, text="Select mode:",font=("Arival",30)).pack()
+    tk.Radiobutton(root, text="Book", variable=mode_var, value="book",font=("Arival",30)).pack()
+    tk.Radiobutton(root, text="Movie", variable=mode_var, value="movie",font=("Arival",30)).pack()
 
     tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
     query_entry = tk.Entry(root, width=100,font=("Arival",30))
