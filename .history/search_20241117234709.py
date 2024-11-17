@@ -98,7 +98,7 @@ class BooleanMatch:
         status_window.update_status("Initialization Completed! Start your travel")
 
     # 输出详细信息
-    def print_message(self,_id: int,query: List):
+    def print_message(self,_id: int,query: str):
         str_id = str(_id)
         if(self.mode == 'book'):
             # book类型检索
@@ -106,9 +106,8 @@ class BooleanMatch:
             # status_window.update_result("Success! The book you want is here!")
             status_window.update_result("ID:   "+str_id)
             for tag in show_tag:
-                for q in query:
-                    if(tag == q):
-                        status_window.update_result(tag)
+                if(tag == query):
+                    status_window.update_result(tag)
             # status_window.update_result("Tag: ")
             # for tag in show_tag:
             #     status_window.update_result(tag)
@@ -122,9 +121,8 @@ class BooleanMatch:
             # status_window.update_result("Success! The movie you want is here!")
             status_window.update_result("ID:   "+str_id)
             for tag in show_tag:
-                for q in query:
-                    if(tag == q):
-                        status_window.update_result(tag)
+                if(tag == query):
+                    status_window.update_result(tag)
             # status_window.update_result("Tag: ")
             # for tag in show_tag:
             #     status_window.update_result(tag)
@@ -215,7 +213,7 @@ class BooleanMatch:
         elif not self.error:
             for _id in ret:
                 # status_window.update_result("Success! The ID you want is here!")
-                self.print_message(_id,self.query_list)
+                self.print_message(_id,query)
             
         
         return self.error

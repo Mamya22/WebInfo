@@ -122,9 +122,8 @@ class BooleanMatch:
             # status_window.update_result("Success! The movie you want is here!")
             status_window.update_result("ID:   "+str_id)
             for tag in show_tag:
-                for q in query:
-                    if(tag == q):
-                        status_window.update_result(tag)
+                if(tag == query):
+                    status_window.update_result(tag)
             # status_window.update_result("Tag: ")
             # for tag in show_tag:
             #     status_window.update_result(tag)
