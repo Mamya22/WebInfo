@@ -61,8 +61,8 @@ class BooleanMatch:
         status_window.clear_result()
         status_window.update_status("Welcome to Boolean Match System!")
         status_window.update_status("Please wait for initialization...")
-        self.book_keyword_path = "./result/book_keyword_zip.json"
-        self.movie_keyword_path = "./result/movie_keyword_zip.json"
+        self.book_keyword_path = "./result/book_keyword.json"
+        self.movie_keyword_path = "./result/movie_keyword.json"
         self.book_reverted_dict_path = "./result/book_reverted_dict.json"
         self.movie_reverted_dict_path = "./result/movie_reverted_dict.json"
         self.book_skip_list_path = "./result/book_skip_dict.json"
@@ -287,42 +287,44 @@ class BooleanMatch:
             index2 = 0
             len_1 = len(L1_id_list)
             len_2 = len(L2_id_list)
-            interval_1 = int((len(L1_id_list)) ** 0.5)
-            interval_2 = int((len(L2_id_list)) ** 0.5)
+            interval_1 = int(len_1 ** 0.5)
+            interval_2 = int(len_2 ** 0.5)
             
-            while index1 < len(L1_id_list) and index2 < len(L2_id_list):
+            while index1 < len_1 and index2 < len_2:
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
-                    if (index1 // interval_1 in L1_skip_list and
-                        L1_id_list[index1] == L2_id_list[index2] and
-                        L1_id_list[L1_skip_list[index1 // interval_1][1]] == L2_id_list[index2]):
-                        
-                        ret.extend(L1_id_list[index1: index1 + interval_1])
-                        index1 += interval_1
-                        index2 += 1
-                    elif (index1 // interval_1 in L1_skip_list and
-                        L1_id_list[index1] < L2_id_list[index2] and
-                        L1_id_list[L1_skip_list[index1 // interval_1][1]] < L2_id_list[index2]):
-                        
-                        ret.extend(L1_id_list[index1: index1 + interval_1])
-                        index1 += interval_1
+                    if index1 // interval_1 < len(L1_skip_list) and L1_skip_list[index1 // interval_1] < len_1:
+                        if (L1_id_list[index1] == L2_id_list[index2] and
+                            L1_id_list[L1_skip_list[index1 // interval_1]] == L2_id_list[index2]):
+                            
+                            ret.extend(L1_id_list[index1: index1 + interval_1])
+                            index1 += interval_1
+                            index2 += 1
+                        elif (L1_id_list[index1] < L2_id_list[index2] and
+                            L1_id_list[L1_skip_list[index1 // interval_1]] < L2_id_list[index2]):
+                            
+                            ret.extend(L1_id_list[index1: index1 + interval_1])
+                            index1 += interval_1
+                        else:
+                            break
                     else:
                         break
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
-                    if (index2 // interval_2 in L2_skip_list and
-                        L2_id_list[index2] == L1_id_list[index1] and
-                        L2_id_list[L2_skip_list[index2 // interval_2][1]] == L1_id_list[index1]):
-                        
-                        ret.extend(L2_id_list[index2: index2 + interval_2])
-                        index2 += interval_2
-                        index1 += 1
-                    elif (index2 // interval_2 in L2_skip_list and
-                        L2_id_list[index2] < L1_id_list[index1] and
-                        L2_id_list[L2_skip_list[index2 // interval_2][1]] < L1_id_list[index1]):
-                        
-                        ret.extend(L2_id_list[index2: index2 + interval_2])
-                        index2 += interval_2
+                    if index2 // interval_2 < len(L2_skip_list) and L2_skip_list[index2 // interval_2] < len_2:
+                        if (L2_id_list[index2] == L1_id_list[index1] and
+                            L2_id_list[L2_skip_list[index2 // interval_2]] == L1_id_list[index1]):
+                            
+                            ret.extend(L2_id_list[index2: index2 + interval_2])
+                            index2 += interval_2
+                            index1 += 1
+                        elif (L2_id_list[index2] < L1_id_list[index1] and
+                            L2_id_list[L2_skip_list[index2 // interval_2]] < L1_id_list[index1]):
+                            
+                            ret.extend(L2_id_list[index2: index2 + interval_2])
+                            index2 += interval_2
+                        else:
+                            break
                     else:
                         break
                 # Compare elements at index1 and index2
@@ -343,6 +345,8 @@ class BooleanMatch:
             if index2 < len(L2_id_list):
                 ret.extend(L2_id_list[index2:])
         return ret, self.CreateSkipList(ret)
+
+    
     def AND(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]

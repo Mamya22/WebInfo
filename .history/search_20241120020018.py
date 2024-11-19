@@ -346,50 +346,77 @@ class BooleanMatch:
     def AND(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]
-        L1_skip_list = T1[1]
         L2_id_list = T2[0]
+        L1_skip_list = T1[1]
         L2_skip_list = T2[1]
-        
+
         if not L1_id_list or not L2_id_list:
-            status_window.update_status("The operand 'AND' lacks parameter!")
+            status_window.update_result("The operand 'AND' lacks parameter!")
             self.error = True
-        if not self.error:
+        else:
             index1 = 0
             index2 = 0
             len_1 = len(L1_id_list)
             len_2 = len(L2_id_list)
             interval_1 = int(len_1 ** 0.5)
             interval_2 = int(len_2 ** 0.5)
-            
+
             while index1 < len_1 and index2 < len_2:
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
-                    if (index1 // interval_1 in L1_skip_list and
-                        L1_id_list[index1] < L2_id_list[index2] and
-                        L1_id_list[L1_skip_list[index1 // interval_1][1]] < L2_id_list[index2]):
-                        
-                        index1 = L1_skip_list[index1 // interval_1][1]
+                    if index1 // interval_1 < len(L1_skip_list) and L1_skip_list[index1 // interval_1][1] < len_1:
+                        if (L1_id_list[index1] == L2_id_list[index2] and
+                            L1_id_list[L1_skip_list[index1 // interval_1][1]] == L2_id_list[index2]):
+
+                            ret.extend(L1_id_list[index1: index1 + interval_1])
+                            index1 += interval_1
+                            index2 += 1
+                        elif (L1_id_list[index1] < L2_id_list[index2] and
+                            L1_id_list[L1_skip_list[index1 // interval_1][1]] < L2_id_list[index2]):
+
+                            ret.extend(L1_id_list[index1: index1 + interval_1])
+                            index1 += interval_1
+                        else:
+                            break
                     else:
                         break
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
-                    if (index2 // interval_2 in L2_skip_list and
-                        L2_id_list[index2] < L1_id_list[index1] and
-                        L2_id_list[L2_skip_list[index2 // interval_2][1]] < L1_id_list[index1]):
-                        
-                        index2 = L2_skip_list[index2 // interval_2][1]
+                    if index2 // interval_2 < len(L2_skip_list) and L2_skip_list[index2 // interval_2][1] < len_2:
+                        if (L2_id_list[index2] == L1_id_list[index1] and
+                            L2_id_list[L2_skip_list[index2 // interval_2][1]] == L1_id_list[index1]):
+
+                            ret.extend(L2_id_list[index2: index2 + interval_2])
+                            index2 += interval_2
+                            index1 += 1
+                        elif (L2_id_list[index2] < L1_id_list[index1] and
+                            L2_id_list[L2_skip_list[index2 // interval_2][1]] < L1_id_list[index1]):
+
+                            ret.extend(L2_id_list[index2: index2 + interval_2])
+                            index2 += interval_2
+                        else:
+                            break
                     else:
                         break
                 # Compare elements at index1 and index2
-                if L1_id_list[index1] == L2_id_list[index2]:
-                    ret.append(L1_id_list[index1])
-                    index1 += 1
-                    index2 += 1
-                elif L1_id_list[index1] < L2_id_list[index2]:
-                    index1 += 1
-                else:
-                    index2 += 1
+                if index1 < len_1 and index2 < len_2:
+                    if L1_id_list[index1] == L2_id_list[index2]:
+                        ret.append(L1_id_list[index1])
+                        index1 += 1
+                        index2 += 1
+                    elif L1_id_list[index1] < L2_id_list[index2]:
+                        ret.append(L1_id_list[index1])
+                        index1 += 1
+                    else:
+                        ret.append(L2_id_list[index2])
+                        index2 += 1
+            # Append remaining elements
+            if index1 < len(L1_id_list):
+                ret.extend(L1_id_list[index1:])
+            if index2 < len(L2_id_list):
+                ret.extend(L2_id_list[index2:])
         return ret, self.CreateSkipList(ret)
+
     def AND_NOT(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]

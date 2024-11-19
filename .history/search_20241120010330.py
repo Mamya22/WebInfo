@@ -61,8 +61,8 @@ class BooleanMatch:
         status_window.clear_result()
         status_window.update_status("Welcome to Boolean Match System!")
         status_window.update_status("Please wait for initialization...")
-        self.book_keyword_path = "./result/book_keyword_zip.json"
-        self.movie_keyword_path = "./result/movie_keyword_zip.json"
+        self.book_keyword_path = "./result/book_keyword.json"
+        self.movie_keyword_path = "./result/movie_keyword.json"
         self.book_reverted_dict_path = "./result/book_reverted_dict.json"
         self.movie_reverted_dict_path = "./result/movie_reverted_dict.json"
         self.book_skip_list_path = "./result/book_skip_dict.json"
@@ -343,6 +343,7 @@ class BooleanMatch:
             if index2 < len(L2_id_list):
                 ret.extend(L2_id_list[index2:])
         return ret, self.CreateSkipList(ret)
+        
     def AND(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]

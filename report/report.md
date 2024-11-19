@@ -140,21 +140,15 @@
 
   + 倒排索引表
 
-    ![](./assets/倒排索引表截图.png)
+    
 
     用字典存储倒排表，`tag`作为键值，列表中存储包含该`tag`的`ID`
 
   + 跳表
 
-    ![](./assets/跳表截图.png)
+    
 
     跳表中每个节点的结构包含了三个元素，分别是文档ID，下一个节点的索引值和当前节点的索引值。
-
-  + 对比
-
-    ![](./assets/倒排索引表和跳表对比.png)
-
-    可以看到，跳表比倒排索引表占用空间少，且能更加快速的进行索引（见下文）
 
 #### 3. 布尔查询
 
@@ -213,11 +207,81 @@
   
   测试结果如下：
   
+  ![](./assets/1.png)
+  
+  ![](./assets/2.png)
+  
+  ![](./assets/3.png)
+  
+  ![](./assets/4.png)
+  
+  ![](./assets/布尔索引测试5.png)
+  
+  ![](./assets/布尔索引测试6.png)
   
 
 #### 4. 实现索引压缩
 
+通过两种压缩方法实现存储，分别是按块存储和可变长度编码
 
++ 按块存储
+
+  ==代码解释补充==
+
+  遍历每个字典，如果是每个块中的第一个字典，则记录长度，并将当前字典的长度转换为字符串追加到词项字符串中，更新计数器的值
+
+  ```python
+  # 按块存储
+  def compress_block(dict_list, block=4):
+      dict_string = ""
+      # 生成词项字符串
+      i = 0
+      # 记录生成字典字符串的指针位置
+      dict_ptr = []
+      for dict in dict_list:
+          if i == 0:
+              dict_ptr.append(len(dict_string))
+          dict_string = dict_string + str(len(dict)) + ''.join(map(str, dict))
+          i = (i + 1) % block
+      return dict_ptr, dict_string
+  ```
+
++ 可变长度编码
+
+  ==代码解释补充==
+
+  首先，通过计算相邻文档ID之间的差值，将原始文档ID列表转换为差值列表。并对差值列表进行可变长度编码。对于每个差值，将其转换为7位一组的二进制表示，并使用前面的组来表示较大数值。最后将每个编码组的最后一组的最高位设置为1，表示结束。
+
+  ```python
+  def compress_encode(doc_ids) -> bytes:
+      # 计算文档id间距
+      size = len(doc_ids)
+      for i in range(size-1,0,-1):
+          doc_ids[i] = doc_ids[i] - doc_ids[i-1]
+      # 将数据转化为bit
+      encode_doc = []
+      for i in range(size):
+          bit = []
+          while doc_ids[i] >= 128: # 7位划分
+              low7bit = doc_ids[i] % 128
+              bit.insert(0, low7bit)
+              doc_ids[i] = doc_ids[i] // 128
+          if doc_ids[i] > 0:
+              bit.insert(0, doc_ids[i])
+          bit[-1] = bit[-1] + 128
+          for k in range(len(bit)):
+              encode_doc.append(bit[k])
+      result = bytes(encode_doc)
+      return result
+  ```
+
++ 效果展示
+
+  ![](C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\report\assets\book压缩对比.png)
+
+  ![](C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\report\assets\movie压缩对比.png)
+
+  可见压缩效果较好
 
 ### 第二阶段 豆瓣数据的个性化检索与推荐
 

@@ -2,32 +2,39 @@ import json
 from typing import AnyStr, Dict, List, Tuple
 from colorama import Fore, Style
 import tkinter as tk
+
 class StatusWindow:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Status & Output Window")
         self.root.geometry("1000x2000")
+
         # 状态标签和文本框
         self.status_label = tk.Label(self.root, text="Status", font=("Arial", 20))
         self.status_label.pack(pady=10)
         self.status_text = tk.Text(self.root, height=10, width=100)
         self.status_text.pack(pady=10)
+
         # 结果标签和文本框
         self.result_label = tk.Label(self.root, text="Result", font=("Arial", 20))
         self.result_label.pack(pady=10)
         self.result_text = tk.Text(self.root, height=500, width=100)
         self.result_text.pack(pady=10)
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.closed = False
+
     def on_closing(self):
         self.closed = True
         self.root.destroy()
+
     def update_status(self, message: str):
         if not self.closed:
             self.status_text.insert(tk.END, message + "\n")
             self.status_text.see(tk.END)
             self.root.update_idletasks()
             self.root.update()
+
     def update_result(self, message: str):
         if not self.closed:
             self.result_text.insert(tk.END, message + "\n")
@@ -40,12 +47,15 @@ class StatusWindow:
             self.status_text.delete(1.0, tk.END)
             self.root.update_idletasks()
             self.root.update()
+
     def clear_result(self):
         if not self.closed:
             self.result_text.delete(1.0, tk.END)
             self.root.update_idletasks()
             self.root.update()
+
 status_window = StatusWindow()
+
 class BooleanMatch:
     def __init__(self):
         self.query = "" # 查询语句
@@ -57,29 +67,36 @@ class BooleanMatch:
         self.reverted_dict = {} # 倒排表
         self.skip_dict = {} # 跳表
         self.pre_sort_ids = ()
+
         status_window.clear_status()
         status_window.clear_result()
         status_window.update_status("Welcome to Boolean Match System!")
         status_window.update_status("Please wait for initialization...")
-        self.book_keyword_path = "./result/book_keyword_zip.json"
-        self.movie_keyword_path = "./result/movie_keyword_zip.json"
+
+        self.book_keyword_path = "./result/book_keyword.json"
+        self.movie_keyword_path = "./result/movie_keyword.json"
         self.book_reverted_dict_path = "./result/book_reverted_dict.json"
         self.movie_reverted_dict_path = "./result/movie_reverted_dict.json"
         self.book_skip_list_path = "./result/book_skip_dict.json"
         self.movie_skip_list_path = "./result/movie_skip_dict.json"
+
+
         with open(self.book_keyword_path, "r", encoding="UTF-8") as f:
             self.book_keyword = json.load(f)
         with open(self.movie_keyword_path, "r", encoding="UTF-8") as f:
             self.movie_keyword = json.load(f)
+
         with open(self.book_reverted_dict_path, "r", encoding="UTF-8") as f:
             self.book_reverted_dict = json.load(f)
         with open(self.movie_reverted_dict_path, "r", encoding="UTF-8") as f:
             self.movie_reverted_dict = json.load(f)
+
         with open(self.book_skip_list_path, "r", encoding="UTF-8") as f:
             self.book_skip_list = json.load(f)
         with open(self.movie_skip_list_path, "r", encoding="UTF-8") as f:
             self.movie_skip_list = json.load(f)
         status_window.update_status("Initialization Completed! Start your travel")
+
     # 输出详细信息
     def print_message(self,_id: int,query: List):
         str_id = str(_id)
@@ -165,6 +182,7 @@ class BooleanMatch:
                 # 处理结尾
                 skip_list.append([id_list[nail], len(id_list)-1, nail])
             return skip_list
+
     def Search(self, query:AnyStr, modes:AnyStr) -> List:
         status_window.update_status("Begin Searching...")
         self.query = query
@@ -201,6 +219,7 @@ class BooleanMatch:
             
         
         return self.error
+
     def BracketOperation(self, query_list: List) -> Tuple:
         # 处理括号表达式
         status_window.update_status("Begin Bracket Operation...")
@@ -233,6 +252,7 @@ class BooleanMatch:
         logic_ret = self.LogicOperation(ret)
         status_window.update_status("Bracket Operation Completed!")
         return logic_ret
+
     def LogicOperation(self, ret: List) -> Tuple:
         if 'OR' in ret:
             or_list = []
@@ -308,6 +328,7 @@ class BooleanMatch:
                         index1 += interval_1
                     else:
                         break
+
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
                     if (index2 // interval_2 in L2_skip_list and
@@ -325,6 +346,7 @@ class BooleanMatch:
                         index2 += interval_2
                     else:
                         break
+
                 # Compare elements at index1 and index2
                 if index1 < len_1 and index2 < len_2:
                     if L1_id_list[index1] == L2_id_list[index2]:
@@ -337,12 +359,15 @@ class BooleanMatch:
                     else:
                         ret.append(L2_id_list[index2])
                         index2 += 1
+
             # Append remaining elements
             if index1 < len(L1_id_list):
                 ret.extend(L1_id_list[index1:])
             if index2 < len(L2_id_list):
                 ret.extend(L2_id_list[index2:])
+
         return ret, self.CreateSkipList(ret)
+
     def AND(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]
@@ -353,6 +378,7 @@ class BooleanMatch:
         if not L1_id_list or not L2_id_list:
             status_window.update_status("The operand 'AND' lacks parameter!")
             self.error = True
+
         if not self.error:
             index1 = 0
             index2 = 0
@@ -371,6 +397,7 @@ class BooleanMatch:
                         index1 = L1_skip_list[index1 // interval_1][1]
                     else:
                         break
+
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
                     if (index2 // interval_2 in L2_skip_list and
@@ -380,6 +407,7 @@ class BooleanMatch:
                         index2 = L2_skip_list[index2 // interval_2][1]
                     else:
                         break
+
                 # Compare elements at index1 and index2
                 if L1_id_list[index1] == L2_id_list[index2]:
                     ret.append(L1_id_list[index1])
@@ -389,13 +417,17 @@ class BooleanMatch:
                     index1 += 1
                 else:
                     index2 += 1
+
         return ret, self.CreateSkipList(ret)
+
+
     def AND_NOT(self, T1: Tuple, T2: Tuple) -> Tuple:
         ret = []
         L1_id_list = T1[0]
         L2_id_list = T2[0]
         L1_skip_list = T1[1]
         L2_skip_list = T2[1]
+
         if not L1_id_list or not L2_id_list:
             status_window.update_status(Fore.RED + "The operand 'NOT' lacks parameter!")
             self.error = True
@@ -406,47 +438,60 @@ class BooleanMatch:
             len_2 = len(L2_id_list)
             interval_1 = int((len(L1_id_list)) ** 0.5)
             interval_2 = int((len(L2_id_list)) ** 0.5)
+
             while index1 < len_1 and index2 < len_2:
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
                     skip_index1 = index1 // interval_1
+
                     if (skip_index1 in L1_skip_list and
                         index1 < len_1 and index2 < len_2 and
                         L1_id_list[index1] == L2_id_list[index2] and
                         skip_index1 < len(L1_skip_list) and
                         L1_skip_list[skip_index1][1] < len_1 and
                         L1_id_list[L1_skip_list[skip_index1][1]] == L2_id_list[index2]):
+
                         index1 += interval_1
                         index2 += 1
+
                     elif (skip_index1 in L1_skip_list and
                         index1 < len_1 and index2 < len_2 and
                         int(L1_id_list[index1]) < int(L2_id_list[index2]) and
                         skip_index1 < len(L1_skip_list) and
                         L1_skip_list[skip_index1][1] < len_1 and
                         L1_id_list[L1_skip_list[skip_index1][1]] < L2_id_list[index2]):
+
                         index1 += interval_1
+
                     else:
                         break
+
                 # try_skip for index2
                 while index2 % interval_2 == 0 and index2 < len_2 - interval_2:
                     skip_index2 = index2 // interval_2
+
                     if (skip_index2 in L2_skip_list and
                         index1 < len_1 and index2 < len_2 and
                         L2_id_list[index2] == L1_id_list[index1] and
                         skip_index2 < len(L2_skip_list) and
                         L2_skip_list[skip_index2][1] < len_2 and
                         L2_id_list[L2_skip_list[skip_index2][1]] == L1_id_list[index1]):
+
                         index2 += interval_2
                         index1 += 1
+
                     elif (skip_index2 in L2_skip_list and
                         index2 < len_2 and index1 < len_1 and
                         int(L2_id_list[index2]) < int(L1_id_list[index1]) and
                         skip_index2 < len(L2_skip_list) and
                         L2_skip_list[skip_index2][1] < len_2 and
                         L2_id_list[L2_skip_list[skip_index2][1]] < L1_id_list[index1]):
+
                         index2 += interval_2
+
                     else:
                         break
+
                 # Compare elements at index1 and index2
                 if index1 < len_1 and index2 < len_2:
                     try:
@@ -459,6 +504,7 @@ class BooleanMatch:
                         if isinstance(L2_id_list[index2], str):
                             index2 += 1
                         continue
+
                     if val1 == val2:
                         index1 += 1
                         index2 += 1
@@ -467,12 +513,16 @@ class BooleanMatch:
                         index1 += 1
                     else:
                         index2 += 1
+
             # Append remaining elements from L1_id_list
             if index1 < len(L1_id_list):
                 ret.extend(L1_id_list[index1:])
+
         return ret, self.CreateSkipList(ret)
+
     def NOT(self, T: Tuple) -> Tuple:
         return self.AND_NOT(self.pre_sort_ids, T)
+
 def start_tkinter():
     bm = BooleanMatch()
     def search():
@@ -494,22 +544,31 @@ def start_tkinter():
             result_label.config(text="Some error occurred in your query.", fg="red")
         else:
             result_label.config(text="Search completed.", fg="green")
+
     root = tk.Tk()
     root.title("Boolean Match System")
     root.geometry("1000x500")
+
     tk.Label(root, text="Enter mode(movie——1/book——2):",font=("Arival",30)).pack()
     mode_entry = tk.Entry(root, width=100,font=("Arival",30))
     mode_entry.pack()
+
     tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
     query_entry = tk.Entry(root, width=100,font=("Arival",30))
     query_entry.pack()
+
     search_button = tk.Button(root, text="Search",font=("Arival",30))
     search_button.pack()
+
     result_label = tk.Label(root, text="")
     result_label.pack()
+
     search_button.config(command=search)
+
     results_text = tk.Text(root, height=20, width=100, font=("Arial", 20))
     results_text.pack()
     root.mainloop()
+
+
 if __name__ == "__main__":
     start_tkinter()

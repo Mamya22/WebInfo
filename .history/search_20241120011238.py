@@ -61,8 +61,8 @@ class BooleanMatch:
         status_window.clear_result()
         status_window.update_status("Welcome to Boolean Match System!")
         status_window.update_status("Please wait for initialization...")
-        self.book_keyword_path = "./result/book_keyword_zip.json"
-        self.movie_keyword_path = "./result/movie_keyword_zip.json"
+        self.book_keyword_path = "./result/book_keyword.json"
+        self.movie_keyword_path = "./result/movie_keyword.json"
         self.book_reverted_dict_path = "./result/book_reverted_dict.json"
         self.movie_reverted_dict_path = "./result/movie_reverted_dict.json"
         self.book_skip_list_path = "./result/book_skip_dict.json"

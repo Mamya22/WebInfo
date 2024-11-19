@@ -293,9 +293,8 @@ class BooleanMatch:
             while index1 < len(L1_id_list) and index2 < len(L2_id_list):
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
-                    if (index1 // interval_1 in L1_skip_list and
-                        L1_id_list[index1] == L2_id_list[index2] and
-                        L1_id_list[L1_skip_list[index1 // interval_1][1]] == L2_id_list[index2]):
+                    if (L1_id_list[index1] == L2_id_list[index2] and L1_id_list[L1_skip_list[index1 // interval_1][1]] == \
+                            L2_id_list[index2]):
                         
                         ret.extend(L1_id_list[index1: index1 + interval_1])
                         index1 += interval_1
@@ -364,9 +363,8 @@ class BooleanMatch:
             while index1 < len_1 and index2 < len_2:
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
-                    if (index1 // interval_1 in L1_skip_list and
-                        L1_id_list[index1] < L2_id_list[index2] and
-                        L1_id_list[L1_skip_list[index1 // interval_1][1]] < L2_id_list[index2]):
+                    if (L1_id_list[index1] < L2_id_list[index2] and L1_id_list[L1_skip_list[index1 // interval_1][1]] < \
+                            L2_id_list[index2]):
                         
                         index1 = L1_skip_list[index1 // interval_1][1]
                     else:
@@ -410,12 +408,8 @@ class BooleanMatch:
                 # try_skip for index1
                 while index1 % interval_1 == 0 and index1 < len_1 - interval_1:
                     skip_index1 = index1 // interval_1
-                    if (skip_index1 in L1_skip_list and
-                        index1 < len_1 and index2 < len_2 and
-                        L1_id_list[index1] == L2_id_list[index2] and
-                        skip_index1 < len(L1_skip_list) and
-                        L1_skip_list[skip_index1][1] < len_1 and
-                        L1_id_list[L1_skip_list[skip_index1][1]] == L2_id_list[index2]):
+                    if (L1_id_list[index1] == L2_id_list[index2] and L1_id_list[L1_skip_list[index1 // interval_1][1]] == \
+                            L2_id_list[index2]):
                         index1 += interval_1
                         index2 += 1
                     elif (skip_index1 in L1_skip_list and
