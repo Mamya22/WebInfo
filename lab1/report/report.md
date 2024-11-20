@@ -30,7 +30,8 @@
 │  │  compress.py		//压缩
 │  │  create_dict.py	//创建倒排表和跳表
 │  │  movie_split.py	//movie分词
-│  │  README.md			
+│  │  README.md		
+|  |  search_without_skip.py  //不带跳表的布尔索引
 │  │  search.py			//布尔索引
 │  │  split_word.py		//分词
 │  │  tempCodeRunnerFile.py
