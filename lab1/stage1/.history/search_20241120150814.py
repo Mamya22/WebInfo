@@ -192,7 +192,7 @@ class BooleanMatch:
         
         ret,ret_skip_list = self.BracketOperation(self.query_list)
         search_end_time = time.time()
-        print(f"Search took {(search_end_time - search_start_time) * 1e3} ms")
+        print(f"Search took {(search_end_time - search_start_time) * 1e9} ns")
         if len(ret) == 0:
             # 未查询到结果
             status_window.update_result("Sorry! But there are no results you want here.")

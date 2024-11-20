@@ -167,7 +167,6 @@ class BooleanMatch:
     
     # 搜索
     def Search(self, query:AnyStr, modes:AnyStr) -> bool:
-        search_start_time = time.time()
         status_window.update_status("Begin Searching...")
         self.query = query
         self.mode = modes
@@ -191,8 +190,7 @@ class BooleanMatch:
         self.pre_sort_ids = (pre_sort_id_list, self.CreateSkipList(pre_sort_id_list))
         
         ret,ret_skip_list = self.BracketOperation(self.query_list)
-        search_end_time = time.time()
-        print(f"Search took {(search_end_time - search_start_time) * 1e3} ms")
+
         if len(ret) == 0:
             # 未查询到结果
             status_window.update_result("Sorry! But there are no results you want here.")
