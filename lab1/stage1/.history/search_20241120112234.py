@@ -84,7 +84,7 @@ class BooleanMatch:
         with open(self.movie_reverted_dict_path, "r", encoding="UTF-8") as f:
             self.movie_reverted_dict = json.load(f)
         
-        status_window.update_status("Initialization Completed! Input your query now.")
+        status_window.update_status("Initialization Completed! Start your travel")
     
     # 输出详细信息
     def print_message(self,_id: int,query: List):
@@ -521,19 +521,15 @@ def start_tkinter():
             result_label.config(text="Some error occurred in your query.", fg="red")
         else:
             result_label.config(text="Search completed.", fg="green")
-    
     root = tk.Tk()
     root.title("Boolean Match System")
     root.geometry("1000x500")
-    # 模式选择输入框
     tk.Label(root, text="Enter mode(movie——1/book——2):",font=("Arival",30)).pack()
     mode_entry = tk.Entry(root, width=100,font=("Arival",30))
     mode_entry.pack()
-    # 查询输入框
     tk.Label(root, text="Enter query:",font=("Arival",30)).pack()
     query_entry = tk.Entry(root, width=100,font=("Arival",30))
     query_entry.pack()
-    # 搜索按钮
     search_button = tk.Button(root, text="Search",font=("Arival",30))
     search_button.pack()
     result_label = tk.Label(root, text="")
@@ -542,6 +538,5 @@ def start_tkinter():
     results_text = tk.Text(root, height=20, width=100, font=("Arial", 20))
     results_text.pack()
     root.mainloop()
-
 if __name__ == "__main__":
     start_tkinter()

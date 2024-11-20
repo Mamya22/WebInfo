@@ -84,7 +84,7 @@ class BooleanMatch:
         with open(self.movie_reverted_dict_path, "r", encoding="UTF-8") as f:
             self.movie_reverted_dict = json.load(f)
         
-        status_window.update_status("Initialization Completed! Input your query now.")
+        status_window.update_status("Initialization Completed! Start your travel")
     
     # 输出详细信息
     def print_message(self,_id: int,query: List):
