@@ -1,4 +1,4 @@
-# Web信息处理与应用 实验一
+# <center>Web信息处理与应用 实验一</center>
 
 
 ## 实验简介
@@ -23,32 +23,32 @@
 ```
 ├─report
 │  │  report.md
-│  │
+│  │  report.pdf		//实验报告
 │  └─assets
 ├─stage1
-│  │  book_split.py
-│  │  compress.py
-│  │  create_dict.py
-│  │  movie_split.py
-│  │  README.md
-│  │  search.py
-│  │  split_word.py
+│  │  book_split.py		//book分词
+│  │  compress.py		//压缩
+│  │  create_dict.py	//创建倒排表和跳表
+│  │  movie_split.py	//movie分词
+│  │  README.md			
+│  │  search.py			//布尔索引
+│  │  split_word.py		//分词
 │  │  tempCodeRunnerFile.py
-│  ├─dataset
+│  ├─dataset			//基础数据
 │  ├─result
 │  │      block_compressed.json
-│  │      book_block_compressed.json
-│  │      book_compressed_revert_dict.bin
-│  │      book_keyword.json
-│  │      book_keyword_zip.json
-│  │      book_reverted_dict.json
-│  │      book_skip_dict.json
-│  │      movie_block_compressed.json
-│  │      movie_compressed_revert_dict.bin
-│  │      movie_keyword.json
-│  │      movie_keyword_zip.json
-│  │      movie_reverted_dict.json
-│  │      movie_skip_dict.json
+│  │      book_block_compressed.json		//book按块压缩
+│  │      book_compressed_revert_dict.bin	//book可变长度编码压缩
+│  │      book_keyword.json					
+│  │      book_keyword_zip.json				//book分词结果
+│  │      book_reverted_dict.json			//book倒排表
+│  │      book_skip_dict.json				//book跳表
+│  │      movie_block_compressed.json		//movie按块压缩
+│  │      movie_compressed_revert_dict.bin	//movie可变长度编码压缩
+│  │      movie_keyword.json		
+│  │      movie_keyword_zip.json			//movie分词结果
+│  │      movie_reverted_dict.json			//movie倒排表
+│  │      movie_skip_dict.json				//movie跳表
 └─stage2
     │  data_process.py   // 处理数据的函数，包括时间编码，向量生成等
     │  index_mapping.py  // 数据集文件
@@ -184,19 +184,19 @@
 
   + 倒排索引表
 
-    
+    <img src="./assets/倒排表截图.png" style="zoom:50%;" />
 
     用字典存储倒排表，`tag`作为键值，列表中存储包含该`tag`的`ID`
 
   + 跳表
 
-    
+    <img src="./assets/跳表截图.png" style="zoom:50%;" />
 
     跳表中每个节点的结构包含了三个元素，分别是文档ID，下一个节点的索引值和当前节点的索引值。
 
 #### 3. 布尔查询
 
-提高索引速度可以通过对文档ID进行按序排列，借助跳表等方法。在构建倒排表时已经实现了文档ID的升序存储，因此在索引时，我们借用已经实现的倒排表和跳表，进行快速索引。
+提高索引速度可以通过对文档ID进行按序排列，借助跳表等方法。在构建倒排表时已经实现了文档ID的升序存储，因此在索引时，我们借用已经实现的倒排表，进行快速索引。
 
 + 基本操作符
 
@@ -217,6 +217,8 @@
   + NOT
 
     从预先存储的文档ID列表中去掉传入的倒排表中的所有ID，利用AND_NOT方法，即可实现
+    
+  + **对于处理完的基础操作二元表达式，需要对结果创建新的跳表，用于递归调用，处理复杂语句**
 
 + 文法输入设计
 
@@ -259,9 +261,9 @@
   
   ![](./assets/4.png)
   
-  ![](./assets/布尔索引测试5.png)
+  ![](./assets/5.png)
   
-  ![](./assets/布尔索引测试6.png)
+  ![](./assets/6.png)
   
 
 #### 4. 实现索引压缩
@@ -269,8 +271,6 @@
 通过两种压缩方法实现存储，分别是按块存储和可变长度编码
 
 + 按块存储
-
-  ==代码解释补充==
 
   遍历每个字典，如果是每个块中的第一个字典，则记录长度，并将当前字典的长度转换为字符串追加到词项字符串中，更新计数器的值
 
@@ -289,10 +289,8 @@
           i = (i + 1) % block
       return dict_ptr, dict_string
   ```
-
+  
 + 可变长度编码
-
-  ==代码解释补充==
 
   首先，通过计算相邻文档ID之间的差值，将原始文档ID列表转换为差值列表。并对差值列表进行可变长度编码。对于每个差值，将其转换为7位一组的二进制表示，并使用前面的组来表示较大数值。最后将每个编码组的最后一组的最高位设置为1，表示结束。
 
@@ -318,14 +316,14 @@
       result = bytes(encode_doc)
       return result
   ```
-
+  
 + 效果展示
 
-  ![](C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\report\assets\book压缩对比.png)
+  ![](./assets/book压缩对比.png)
 
-  ![](C:\Users\28932\OneDrive\桌面\Web\lab\lab1\WebInfo\report\assets\movie压缩对比.png)
+  ![](./assets/movie压缩对比.png)
 
-  可见压缩效果较好
+  **可见压缩效果较好**
 
 ### 第二阶段 豆瓣数据的个性化检索与推荐
 #### 代码结构
@@ -374,6 +372,7 @@ class BiasSVD(nn.Module):
 - 考虑时间的周期性，将时间按照年、月或者日映射，由于月和日均具有周期性，将其进行编码。经过对于数据的观察，不同评分数据之间年份有跨度，会损失一部分信息，故放弃此种做法。
 - 考虑时间的全局性，将总时间转化为天数，对总时间进行编码。选用此种做法。
   
+
 受到`Transformer`的启发，在本数据集中，时间`time`与评分`rate`、物品`item`相对应，因此可以把时间看作是一个`item`的位置。故将时间采用正余弦编码的方式转化为向量。在此过程中，把`time`看作跟`item`有关的属性，同样参考`Transformer`利用位置编码的方式，故在训练过程中，将时间编码与物品编码相加，考虑到时间编码的作用未知，对位置编码设置可学习的权重，即
 `item_embed = item_embed + self.time_weight * time_embed`。
 具体的时间编码公式如下：
@@ -404,3 +403,5 @@ $$ timeEmbedding = [sin(w_0t), cos(w_0t), ..., sin(w_{\frac{d}{2}}t),cos(w_{\fra
   - 可能优化方向：将得到的`Tag`再次分类，属于`item`共性的内容，比如书籍作者，书籍类型单独编码，通过评分处理后，与用户结合，从而预测用户偏好。对于书籍，将所有`Tag`编码后与书籍编码结合。
 
 ## 实验总结
+
+​	本次实验使用分词工具对初始文件进行处理、创建倒排表和跳表、进行布尔索引处理逻辑操作和复杂语句、调用模型进行个性化检索。通过编写代码，查询资料，加深了对数据索引和分析的认知，也拓展了课堂上的知识。
