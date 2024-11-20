@@ -19,14 +19,58 @@
 + 组长：方馨     PB22111656
 + 组员：马筱雅 PB22111639
 + 组员：陈昕琪 PB22111711
-
+## 代码目录
+```
+├─report
+│  │  report.md
+│  │
+│  └─assets
+├─stage1
+│  │  book_split.py
+│  │  compress.py
+│  │  create_dict.py
+│  │  movie_split.py
+│  │  README.md
+│  │  search.py
+│  │  split_word.py
+│  │  tempCodeRunnerFile.py
+│  ├─dataset
+│  ├─result
+│  │      block_compressed.json
+│  │      book_block_compressed.json
+│  │      book_compressed_revert_dict.bin
+│  │      book_keyword.json
+│  │      book_keyword_zip.json
+│  │      book_reverted_dict.json
+│  │      book_skip_dict.json
+│  │      movie_block_compressed.json
+│  │      movie_compressed_revert_dict.bin
+│  │      movie_keyword.json
+│  │      movie_keyword_zip.json
+│  │      movie_reverted_dict.json
+│  │      movie_skip_dict.json
+└─stage2
+    │  data_process.py   // 处理数据的函数，包括时间编码，向量生成等
+    │  index_mapping.py  // 数据集文件
+    │  Model.py          // BiasSVD模型
+    │  preprocess.py     // 预处理文件，调用data_process中的函数
+    │  train.py           //训练文件
+    │
+    └─dataset
+            book_score.csv
+            book_tag_embedding_dict.pkl  // book Tag编码
+            movie_score.csv
+            selected_book_top_1200_data_tag.csv
+            selected_movie_top_1200_data_tag.csv
+            tag_embedding_dict.pkl
+```
 ## 实验内容
 
 ### 第一阶段 豆瓣数据的索引
 
 #### 1. 对数据进行预处理
 
-+ 两种分词方法说明，使用**`jieba`**和**`SnowNLP`**两种分词工具。  
++ 两种分词方法说明，使用`jieba`和`SnowNLP`两种分词工具。  
   + `jieba`：支持三种分词模式：
   精确模式，试图将句子最精确地切开，适合文本分析；
   全模式，全是一种比较宽松的分词模式，它会将文本中所有可能的词语都分出来，速度非常快，但是不能解决歧义（不考虑这种模式）；
@@ -42,16 +86,16 @@
   
   + 以下为文件大小对比
   
-    |文件内容|文件大小|
-    | -------------------------------------- | ------- |
-    | 不做处理的分词的未压缩的书籍倒排索引表 | 4296kb  |
-    | 压缩后的书籍倒排索引表                 | 487kb   |
-    | 不做处理的分词的未压缩的电影倒排索引表 | 14176kb |
-    | 压缩后的电影倒排索引表                 | 1385kb  |
-    | 去除停用词后的未压缩的书籍倒排索引表   | 4012kb  |
-    | 压缩后的书籍倒排索引表                 | 454kb   |
-    | 去除停用词后的未压缩的电影倒排索引表   | 13458kb |
-    | 压缩后的电影倒排索引表                 | 1316kb  |
+    | 文件内容                               | 文件大小 |
+    | -------------------------------------- | -------- |
+    | 不做处理的分词的未压缩的书籍倒排索引表 | 4296kb   |
+    | 压缩后的书籍倒排索引表                 | 487kb    |
+    | 不做处理的分词的未压缩的电影倒排索引表 | 14176kb  |
+    | 压缩后的电影倒排索引表                 | 1385kb   |
+    | 去除停用词后的未压缩的书籍倒排索引表   | 4012kb   |
+    | 压缩后的书籍倒排索引表                 | 454kb    |
+    | 去除停用词后的未压缩的电影倒排索引表   | 13458kb  |
+    | 压缩后的电影倒排索引表                 | 1316kb   |
   
   
   **由此，去除停用词使压缩后的倒排索引表文件大小减小为95%左右。**
@@ -284,14 +328,79 @@
   可见压缩效果较好
 
 ### 第二阶段 豆瓣数据的个性化检索与推荐
+#### 代码结构
 
-#### 通过协同过滤进行评分预测
+#### 基础设定
+- 学习率为`lr = 0.005`
+- 测试集比例为`0.4`
+- 模型选用`BiasSVD`
+#### 运行方式
+- 首先对数据进行预处理，`python preprocess.py`，该步骤的作用是把`Tag`转换成向量，同时对时间进行转换。对于`Book`类型，已经进行了转换。
+- 训练：`python train.py --mode (Tag, Time , both or None) --item (Movie or Book)`
+#### 模型选择
+在用户的评分数据中，评分可能跟用户本身的习惯和物品本身有关，而在基础的矩阵分解模型中，并未考虑到用户的打分偏好等因素，因此在本实验中，采用考虑偏置项的矩阵分解模型，即`BiasSVD`。
+在`BiasSVD`中，设置用户偏置项$b_u$，物品偏置项$b_i$，以及全局偏置项$u$，则可以得到预测函数为
+$$\widehat{r} = u + b_i + b_u + p_u^Tq_i$$
+损失函数为
+$$cost = \sum_{u,i \in R}(r - \widehat{r})^2 + \lambda (\sum_{u} \left\lVert p_u \right\rVert^2 + \sum_{i}\left\lVert q_i \right\rVert^2  + \sum_{u} b_u^2 + \sum_{i} b_i^2)$$
+`BiasSVD`模型代码为
+```python
+class BiasSVD(nn.Module):
+    def __init__(self, user_number, item_number, embedding_dim, hidden_state, mean, dropout=0.2):
+        super(BiasSVD, self).__init__()
+        self.user_embedding = nn.Embedding(user_number, embedding_dim)
+        self.item_embedding = nn.Embedding(item_number, embedding_dim)
+        # 用户和物品偏差
+        self.user_bias = nn.Embedding(user_number, 1)
+        self.item_bias = nn.Embedding(item_number, 1)
+        self.tag_weight = nn.Parameter(torch.FloatTensor([1.0]))
+        self.global_bias = nn.Parameter(torch.FloatTensor([mean]))
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, user_id, item_id, tag_embedding, time=0, Time = False, Tag=False):
+        item_embed = self.item_embedding(item_id)
+        user_embed = self.user_embedding(user_id)
+        user_bias = self.user_bias(user_id).squeeze()
+        item_bias = self.item_bias(item_id).squeeze()
+        item_embed = self.dropout(item_embed)
+        user_embed = self.dropout(user_embed)
+        return (user_embed * item_embed).sum(dim=1) + user_bias + item_bias + self.global_bias
+```
+##### 预测结果
+![alt text](<./assets/屏幕截图 2024-11-19 163806-basic.png>)
+
+#### 考虑时间因素的预测
+考虑到时间会对评分有影响，比如与某时刻相近的评分和该时刻的评分结果更相关。因此有以下思路：
+- 考虑时间的周期性，将时间按照年、月或者日映射，由于月和日均具有周期性，将其进行编码。经过对于数据的观察，不同评分数据之间年份有跨度，会损失一部分信息，故放弃此种做法。
+- 考虑时间的全局性，将总时间转化为天数，对总时间进行编码。选用此种做法。
+  
+受到`Transformer`的启发，在本数据集中，时间`time`与评分`rate`、物品`item`相对应，因此可以把时间看作是一个`item`的位置。故将时间采用正余弦编码的方式转化为向量。在此过程中，把`time`看作跟`item`有关的属性，同样参考`Transformer`利用位置编码的方式，故在训练过程中，将时间编码与物品编码相加，考虑到时间编码的作用未知，对位置编码设置可学习的权重，即
+`item_embed = item_embed + self.time_weight * time_embed`。
+具体的时间编码公式如下：
+$$ timeEmbedding = [sin(w_0t), cos(w_0t), ..., sin(w_{\frac{d}{2}}t),cos(w_{\frac{d}{2}}t)]$$
+其中$$w_i = \frac{1}{10000^{\frac{2i}{d}}}$$
 
 
+##### 预测结果
+![alt text](./assets/最新time.png)
+通过与未加时间因素的结果对比，可知加入时间因素后，训练的`loss`降低，`ndcg`明显增加。因此考虑时间因素会增强模型的预测能力和泛化能力，提高精度。
 
-#### 根据`tag`等文本信息辅助预测
+#### 考虑Tag信息的预测
+经过观察，在聚合了`Tag`的文件中，`Tag`的内容指代不够清晰，没有很明显的主题或者概述性描述，因此先对`Tag`内容进行处理。
+- **提取Tag中的关键内容**：对`Tag`中的内容采用`LDA`聚类算法提取主题，一共提取三个主题，每个主题提取出五个关键词，经处理后得到效果如图，可以看出与初始数据相比，聚类后的`Tag`具有更高的概括性，更能反映物品特征。
+![alt text](./assets/image.png)
+- **编码Tag**：对聚类后的`Tag`，采用与示例代码相似的形式，使用`bert-base-chinese`模型进行编码，从而考虑`Tag`的语义特征。
+- **向量变换**：得到`Tag`编码后，使用线性和非线性变换的结合处理`Tag`，使之降维，并能更好地提取出物品特征。
+- **结合**：分别使用`Tag`对用户和物品进行处理。`Tag`一方面反映了用户的偏好，所以使用`Tag`编码与用户编码点乘，相当于用`Tag`信息对用户进行加权，从而提取特征。另一方面，`Tag`是物品本身的属性，将`Tag`与物品编码相加，从而结合物品特征。经对比，前者效果较好。
+##### 预测结果
+![alt text](./assets/最新Tag.png)
+##### 结果分析
 
-
+  可以看出`Tag`编码对预测效果有轻微帮助，在前几个训练周期，`ndcg`有较大变化，但随着训练次数增加，`ndcg`几乎不变，并且与未加`Tag`相比，优化效果较弱。猜测原因可能如下。
+  - 得到的物品的`Tag`信息内容较多，也包含`item`主要内容，这些属于`item`自身特性（比如书籍主角名字）的`Tag`对提取用户偏好可能用处不大。
+  - `Tag`并未根据评分进行处理，使得所有评分的`Tag`对用户的作用差距较小，从而对评分预测帮助较小。
+  - 对聚类后的`Tag`进行简单组合编码，对`Tag`的信息提取方式不合理，使得用户与`Tag`的交融不充分，特征提取不充分。
+  - 数据本身的特点，比如用户评分高的书籍`Tag`之间共性较小。
+  - 可能优化方向：将得到的`Tag`再次分类，属于`item`共性的内容，比如书籍作者，书籍类型单独编码，通过评分处理后，与用户结合，从而预测用户偏好。对于书籍，将所有`Tag`编码后与书籍编码结合。
 
 ## 实验总结
-
