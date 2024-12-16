@@ -53,11 +53,12 @@ for relation in relations:#将关系映射到[0, num of relations)范围内
 with open(kg_path, 'r') as fin:
     with open(kg_final_path, 'w') as fout:
         for line in fin:
-            triplet = line.strip().split('\t')
+            triplet = line.strip().split('\t')  # 使用制表符分割原始数据
             triplet[0] = entities2id[triplet[0]]
             triplet[1] = relations2id[triplet[1]]
             triplet[2] = entities2id[triplet[2]]
-            fout.write('\t'.join(triplet) + '\n')
+            fout.write(' '.join(triplet) + '\n')  # 使用空格作为分割符写入文件
+
 
 #保存实体和关系的 ID 映射到文件
 entity2id_path = './data/entity2id.txt'

@@ -58,6 +58,7 @@ class DataLoaderBase(object):
     # 加载知识图谱
     def load_kg(self, filename):
         kg_data = pd.read_csv(filename, sep=' ', names=['h', 'r', 't'], engine='python')
+        # print("loader_base:kg_data: ", kg_data['r'])
         kg_data = kg_data.drop_duplicates()
         return kg_data
 

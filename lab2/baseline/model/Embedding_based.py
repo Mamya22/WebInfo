@@ -187,4 +187,3 @@ class Embedding_based(nn.Module):
         else:
             return self.calc_score(*input)
 
-
