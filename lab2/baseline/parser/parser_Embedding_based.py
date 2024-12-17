@@ -56,7 +56,8 @@ def parse_args():
 
     parser.add_argument('--Ks', nargs='?', default='[5, 10]',
                         help='Calculate metric@K when evaluating.')
-
+    parser.add_argument('--train_mode',  default='multi-task', type=str,
+                        help='multi-task or iter-task')
     args = parser.parse_args()
 
     save_dir = 'trained_model/{}/Embedding_based/dim{}_lr{}_l2{}_{}/'.format(
