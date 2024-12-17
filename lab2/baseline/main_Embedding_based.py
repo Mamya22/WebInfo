@@ -155,7 +155,7 @@ def train(args):
                     logging.info('Save model on epoch {:04d}!'.format(epoch))
                     best_epoch = epoch
 
-    elif args.train_mode == "iter_task":
+    elif args.train_mode == "iter-task":
         for epoch in range(1, args.n_epoch + 1):
             model.train()
 
