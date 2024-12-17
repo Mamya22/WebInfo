@@ -96,63 +96,152 @@ def train(args):
     metrics_list = {k: {'precision': [], 'recall': [], 'ndcg': []} for k in Ks}
 
     # train model
-    for epoch in range(1, args.n_epoch + 1):
-        model.train()
+    if args.train_mode == "multi-task":
+        for epoch in range(1, args.n_epoch + 1):
+            model.train()
 
-        # train kg & cf
-        time1 = time()
-        total_loss = 0
-        n_batch = data.n_cf_train // data.cf_batch_size + 1
+            # train kg & cf
+            time1 = time()
+            total_loss = 0
+            n_batch = data.n_cf_train // data.cf_batch_size + 1
 
-        for iter in range(1, n_batch + 1):
-            time2 = time()
-            cf_batch_user, cf_batch_pos_item, cf_batch_neg_item = data.generate_cf_batch(data.train_user_dict, data.cf_batch_size)
-            kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail = data.generate_kg_batch(data.kg_dict, data.kg_batch_size, data.n_entities)
+            for iter in range(1, n_batch + 1):
+                time2 = time()
+                cf_batch_user, cf_batch_pos_item, cf_batch_neg_item = data.generate_cf_batch(data.train_user_dict, data.cf_batch_size)
+                kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail = data.generate_kg_batch(data.kg_dict, data.kg_batch_size, data.n_entities)
 
-            cf_batch_user = cf_batch_user.to(device)
-            cf_batch_pos_item = cf_batch_pos_item.to(device)
-            cf_batch_neg_item = cf_batch_neg_item.to(device)
+                cf_batch_user = cf_batch_user.to(device)
+                cf_batch_pos_item = cf_batch_pos_item.to(device)
+                cf_batch_neg_item = cf_batch_neg_item.to(device)
 
-            kg_batch_head = kg_batch_head.to(device)
-            kg_batch_relation = kg_batch_relation.to(device)
-            kg_batch_pos_tail = kg_batch_pos_tail.to(device)
-            kg_batch_neg_tail = kg_batch_neg_tail.to(device)
+                kg_batch_head = kg_batch_head.to(device)
+                kg_batch_relation = kg_batch_relation.to(device)
+                kg_batch_pos_tail = kg_batch_pos_tail.to(device)
+                kg_batch_neg_tail = kg_batch_neg_tail.to(device)
 
-            batch_loss = model(cf_batch_user, cf_batch_pos_item, cf_batch_neg_item, kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail, is_train=True)
+                batch_loss = model(cf_batch_user, cf_batch_pos_item, cf_batch_neg_item, kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail, is_train=True)
 
-            if np.isnan(batch_loss.cpu().detach().numpy()):
-                logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch))
-                sys.exit()
+                if np.isnan(batch_loss.cpu().detach().numpy()):
+                    logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch))
+                    sys.exit()
 
-            batch_loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            total_loss += batch_loss.item()
+                batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                total_loss += batch_loss.item()
 
-            if (iter % args.print_every) == 0:
-                logging.info('KG & CF Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch, time() - time2, batch_loss.item(), total_loss / iter))
-        logging.info('KG & CF Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch, time() - time1, total_loss / n_batch))
+                if (iter % args.print_every) == 0:
+                    logging.info('KG & CF Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch, time() - time2, batch_loss.item(), total_loss / iter))
+            logging.info('KG & CF Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch, time() - time1, total_loss / n_batch))
 
-        # evaluate cf
-        if (epoch % args.evaluate_every) == 0 or epoch == args.n_epoch:
+            # evaluate cf
+            if (epoch % args.evaluate_every) == 0 or epoch == args.n_epoch:
+                time3 = time()
+                _, metrics_dict = evaluate(model, data, Ks, device)
+                logging.info('CF Evaluation: Epoch {:04d} | Total Time {:.1f}s | Precision [{:.4f}, {:.4f}], Recall [{:.4f}, {:.4f}], NDCG [{:.4f}, {:.4f}]'.format(
+                    epoch, time() - time3, metrics_dict[k_min]['precision'], metrics_dict[k_max]['precision'], metrics_dict[k_min]['recall'], metrics_dict[k_max]['recall'], metrics_dict[k_min]['ndcg'], metrics_dict[k_max]['ndcg']))
+
+                epoch_list.append(epoch)
+                for k in Ks:
+                    for m in ['precision', 'recall', 'ndcg']:
+                        metrics_list[k][m].append(metrics_dict[k][m])
+                best_recall, should_stop = early_stopping(metrics_list[k_min]['recall'], args.stopping_steps)
+
+                if should_stop:
+                    break
+
+                if metrics_list[k_min]['recall'].index(best_recall) == len(epoch_list) - 1:
+                    save_model(model, args.save_dir, log_save_id, epoch, best_epoch)
+                    logging.info('Save model on epoch {:04d}!'.format(epoch))
+                    best_epoch = epoch
+
+    elif args.train_mode == "iter_task":
+        for epoch in range(1, args.n_epoch + 1):
+            model.train()
+
+            # train kg & cf
+            time1 = time()
+            # total_loss = 0
+            # n_batch = data.n_cf_train // data.cf_batch_size + 1
+            total_kg_loss = 0
+            n_batch_kg = data.n_cf_train // data.kg_batch_size + 1
+            for iter in range(1, n_batch_kg + 1):
+                time2 = time()
+                kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail = data.generate_kg_batch(data.kg_dict, data.kg_batch_size, data.n_entities)
+                kg_batch_head = kg_batch_head.to(device)
+                kg_batch_relation = kg_batch_relation.to(device)
+                kg_batch_pos_tail = kg_batch_pos_tail.to(device)
+                kg_batch_neg_tail = kg_batch_neg_tail.to(device)
+
+                kg_batch_loss = model(kg_batch_head, kg_batch_relation,kg_batch_pos_tail, kg_batch_neg_tail, is_train= True, mode='KG')
+                if np.isnan(kg_batch_loss.cpu().detach().numpy()):
+                    logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch_kg))
+                    sys.exit()
+                kg_batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                total_kg_loss += kg_batch_loss.item()
+
+                if (iter % args.print_every) == 0:
+                    logging.info('KG Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch_kg, time() - time2, kg_batch_loss.item(), total_kg_loss / iter))
+                
+            logging.info('KG Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch_kg, time() - time1, total_kg_loss / n_batch_kg))
+
             time3 = time()
-            _, metrics_dict = evaluate(model, data, Ks, device)
-            logging.info('CF Evaluation: Epoch {:04d} | Total Time {:.1f}s | Precision [{:.4f}, {:.4f}], Recall [{:.4f}, {:.4f}], NDCG [{:.4f}, {:.4f}]'.format(
-                epoch, time() - time3, metrics_dict[k_min]['precision'], metrics_dict[k_max]['precision'], metrics_dict[k_min]['recall'], metrics_dict[k_max]['recall'], metrics_dict[k_min]['ndcg'], metrics_dict[k_max]['ndcg']))
+            total_cf_loss = 0
+            n_batch_cf = data.n_cf_train // data.cf_batch_size + 1
 
-            epoch_list.append(epoch)
-            for k in Ks:
-                for m in ['precision', 'recall', 'ndcg']:
-                    metrics_list[k][m].append(metrics_dict[k][m])
-            best_recall, should_stop = early_stopping(metrics_list[k_min]['recall'], args.stopping_steps)
+            for iter in range(1, n_batch_cf + 1):
+                time4 = time()
+                cf_batch_user, cf_batch_pos_item, cf_batch_neg_item = data.generate_cf_batch(data.train_user_dict, data.cf_batch_size)
+                # kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail = data.generate_kg_batch(data.kg_dict, data.kg_batch_size, data.n_entities)
 
-            if should_stop:
-                break
+                cf_batch_user = cf_batch_user.to(device)
+                cf_batch_pos_item = cf_batch_pos_item.to(device)
+                cf_batch_neg_item = cf_batch_neg_item.to(device)
 
-            if metrics_list[k_min]['recall'].index(best_recall) == len(epoch_list) - 1:
-                save_model(model, args.save_dir, log_save_id, epoch, best_epoch)
-                logging.info('Save model on epoch {:04d}!'.format(epoch))
-                best_epoch = epoch
+                # kg_batch_head = kg_batch_head.to(device)
+                # kg_batch_relation = kg_batch_relation.to(device)
+                # kg_batch_pos_tail = kg_batch_pos_tail.to(device)
+                # kg_batch_neg_tail = kg_batch_neg_tail.to(device)
+
+                cf_batch_loss = model(cf_batch_user, cf_batch_pos_item, cf_batch_neg_item, is_train=True, mode='CF')
+
+                if np.isnan(cf_batch_loss.cpu().detach().numpy()):
+                    logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch_cf))
+                    sys.exit()
+
+                cf_batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                total_cf_loss += cf_batch_loss.item()
+
+                if (iter % args.print_every) == 0:
+                    logging.info('CF Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch_cf, time() - time4, cf_batch_loss.item(), total_cf_loss / iter))
+            
+            logging.info('CF Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch_cf, time() - time3, total_cf_loss / n_batch_cf))
+
+            # evaluate cf
+            if (epoch % args.evaluate_every) == 0 or epoch == args.n_epoch:
+                time5 = time()
+                _, metrics_dict = evaluate(model, data, Ks, device)
+                logging.info('CF Evaluation: Epoch {:04d} | Total Time {:.1f}s | Precision [{:.4f}, {:.4f}], Recall [{:.4f}, {:.4f}], NDCG [{:.4f}, {:.4f}]'.format(
+                    epoch, time() - time5, metrics_dict[k_min]['precision'], metrics_dict[k_max]['precision'], metrics_dict[k_min]['recall'], metrics_dict[k_max]['recall'], metrics_dict[k_min]['ndcg'], metrics_dict[k_max]['ndcg']))
+
+                epoch_list.append(epoch)
+                for k in Ks:
+                    for m in ['precision', 'recall', 'ndcg']:
+                        metrics_list[k][m].append(metrics_dict[k][m])
+                best_recall, should_stop = early_stopping(metrics_list[k_min]['recall'], args.stopping_steps)
+
+                if should_stop:
+                    break
+
+                if metrics_list[k_min]['recall'].index(best_recall) == len(epoch_list) - 1:
+                    save_model(model, args.save_dir, log_save_id, epoch, best_epoch)
+                    logging.info('Save model on epoch {:04d}!'.format(epoch))
+                    best_epoch = epoch
+
 
     # save metrics
     metrics_df = [epoch_list]
@@ -198,3 +287,4 @@ if __name__ == '__main__':
     args = parse_args()
     train(args)
     # predict(args)
+
