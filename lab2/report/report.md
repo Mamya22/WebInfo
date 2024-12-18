@@ -233,12 +233,23 @@ endlocal
 | 64  | 0.0639   | 0.1085 | 0.2904    | 0.2687  |
 
 将结果可视化图像如下:
+<table>
+    <tr>
+        <td ><center><img src="./output_images/Recall_at_5.png" ></center></td>
+        <td ><center><img src="./output_images/NDCG_at_5.png"  ></center></td>
+    </tr>
 
-![](./output_images/Recall_at_5.png)
+    <tr>
+        <td><center><img src="./output_images/Recall_at_10.png" ></center></td>
+        <td ><center><img src="./output_images/NDCG_at_10.png"  ></center> </td>
+    </tr>
+</table>
+
+<!-- ![](./output_images/Recall_at_5.png)
 
 ![](./output_images/NDCG_at_5.png)
 ![](./output_images/Recall_at_10.png)
-![](./output_images/NDCG_at_10.png)
+![](./output_images/NDCG_at_10.png) -->
 
 ###### 结果分析
 
@@ -320,7 +331,19 @@ endlocal
 | 1e-3 | 2e-4 | 0.0656   | 0.3038 | 0.1149    | 0.2815  |
 
 将结果可视化图像如下:
+<table>
+    <tr>
+        <td ><center><img src="./output_images/Recall@5_lr_l2.png" ></center></td>
+        <td ><center><img src="./output_images/NDCG@5_lr_l2.png"  ></center></td>
+    </tr>
 
+    <tr>
+        <td><center><img src="./output_images/Recall@10_lr_l2.png" ></center></td>
+        <td ><center><img src="./output_images/NDCG@10_lr_l2.png"  ></center> </td>
+    </tr>
+</table>
+
+<!--
 ![](./output_images/Recall@5_lr_l2.png)
 
 ![](./output_images/NDCG@5_lr_l2.png)
@@ -328,6 +351,7 @@ endlocal
 ![](./output_images/Recall@10_lr_l2.png)
 
 ![](./output_images/NDCG@10_lr_l2.png)
+-->
 
 ###### 结果分析
 
