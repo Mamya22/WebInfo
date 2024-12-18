@@ -179,13 +179,15 @@ item_cf_embed =        item_embed + item_kg_embed
 
 #### 结果分析
 
+**与基础模型结果比较**：
 相较于基础模型，可以看到嵌入了知识图谱的模型结果并没有大幅提升，通过相乘嵌入的模型甚至低于基础模型，分析如下：
 
 + 可能是因为相加和相乘嵌入融合的方法较为简单，不足以捕捉到知识图谱中的复杂关系。而基础模型可能已经足够复杂，可以捕捉到大部分有效信息。简单的嵌入方法可能无法显著超越基础模型
 + 也可能因为数据量不足，知识图谱中没有包含太多可以让模型学习的东西，即使使用嵌入式的方法，也无法带来明显的性能提升
 + 还可能因为使用的嵌入式方法不够精细，嵌入方法需要精细的超参数调优来发挥其最佳效果。参数没有调试好可能限制性能提升
 
-而对于相加相乘嵌入的比较，猜测出现该结果的原因可能如下：
+**不同融合方式比较**：
+对于相加相乘嵌入的比较，猜测出现该结果的原因可能如下：
 
 + 某些情况下，直接相乘可能导致嵌入的维度在某些轴上的数值变得非常大或非常小，进而影响模型的表现。而相加更能保留原始嵌入的尺度和方向，通常更加稳定。
 + 乘法可能会导致部分信息被削弱或忽略，特别是如果两个向量在同一维度上有小值的话，这些维度的信息会被进一步减弱。加法是一种线性变换，更能完整地保留两个嵌入向量的特征，并且在大多数情况下更容易被模型处理。
@@ -222,23 +224,21 @@ endlocal
 
 得到的结果如下
 
-| dim  | Recall@5 | NDCG@5 | Recall@10 | NDCG@10 |
-| ---- | -------- | ------ | --------- | ------- |
-| 16   | 0.0685   | 0.3030 | 0.1132    | 0.2774  |
-| 24   | 0.0682   | 0.3146 | 0.1151    | 0.2852  |
-| 32   | 0.0658   | 0.3047 | 0.1152    | 0.2819  |
-| 48   | 0.0654   | 0.2960 | 0.1092    | 0.2735  |
-| 64   | 0.0639   | 0.1085 | 0.2904    | 0.2687  |
+| dim | Recall@5 | NDCG@5 | Recall@10 | NDCG@10 |
+| --- | -------- | ------ | --------- | ------- |
+| 16  | 0.0685   | 0.3030 | 0.1132    | 0.2774  |
+| 24  | 0.0682   | 0.3146 | 0.1151    | 0.2852  |
+| 32  | 0.0658   | 0.3047 | 0.1152    | 0.2819  |
+| 48  | 0.0654   | 0.2960 | 0.1092    | 0.2735  |
+| 64  | 0.0639   | 0.1085 | 0.2904    | 0.2687  |
 
 将结果可视化图像如下:
 
-![](.\output_images\Recall_at_5.png)
+![](./output_images/Recall_at_5.png)
 
-![](.\output_images\NDCG_at_5.png)
-
-![](.\output_images\Recall_at_10.png)
-
-![](.\output_images\NDCG_at_10.png)
+![](./output_images/NDCG_at_5.png)
+![](./output_images/Recall_at_10.png)
+![](./output_images/NDCG_at_10.png)
 
 ###### 结果分析
 
@@ -321,17 +321,17 @@ endlocal
 
 将结果可视化图像如下:
 
-![](.\output_images\Recall@5_lr_l2.png)
+![](./output_images/Recall@5_lr_l2.png)
 
-![](.\output_images\NDCG@5_lr_l2.png)
+![](./output_images/NDCG@5_lr_l2.png)
 
-![](.\output_images\Recall@10_lr_l2.png)
+![](./output_images/Recall@10_lr_l2.png)
 
-![](.\output_images\NDCG@10_lr_l2.png)
+![](./output_images/NDCG@10_lr_l2.png)
 
 ###### 结果分析
 
-+ 正则化参数``kg_l2loss_lambda` 和 `cf_l2loss_lambda`
++ 正则化参数`kg_l2loss_lambda` 和 `cf_l2loss_lambda`
 
   + **较大的正则化参数（例如1e-3）**：
 
@@ -372,3 +372,74 @@ endlocal
 综合分析：
 
 实验输出的数据较为复杂，综合分析，较低的学习率（1e-4）配合适当的正则化参数（例如 1e-3 或 2e-4）可以提供较好的性能，避免过拟合，同时确保模型充分学习训练数据中的复杂关系。中等学习率（1e-3）也可以提供较好的性能，但可能还需要仔细调节正则化参数以防止过拟合才能达到较好的效果。
+
+### 5 选做1，使用迭代优化方式
+
+#### 5.1 代码调整
+- 增加参数`--train_mode`，以便于选择优化方式，`multi-task`为多任务优化，`iter-task`为迭代优化
+- 迭代优化实现：迭代优化则需要分开计算出`kg`的损失函数和`cf`的损失函数，分别用两种方式对模型进行训练，在一次`epoch`中，两种模型交替进行，则修改训练文件，添加代码如下
+```PYTHON
+for epoch in range(1, args.n_epoch + 1):
+            model.train()
+            time1 = time()
+            total_kg_loss = 0
+            n_batch_kg = data.n_cf_train // data.kg_batch_size + 1
+            for iter in range(1, n_batch_kg + 1):
+                time2 = time()
+                kg_batch_head, kg_batch_relation, kg_batch_pos_tail, kg_batch_neg_tail = data.generate_kg_batch(data.kg_dict, data.kg_batch_size, data.n_entities)
+                kg_batch_head = kg_batch_head.to(device)
+                kg_batch_relation = kg_batch_relation.to(device)
+                kg_batch_pos_tail = kg_batch_pos_tail.to(device)
+                kg_batch_neg_tail = kg_batch_neg_tail.to(device)
+
+                kg_batch_loss = model(kg_batch_head, kg_batch_relation,kg_batch_pos_tail, kg_batch_neg_tail, is_train= True, mode='KG')
+                if np.isnan(kg_batch_loss.cpu().detach().numpy()):
+                    logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch_kg))
+                    sys.exit()
+                kg_batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                total_kg_loss += kg_batch_loss.item()
+
+                if (iter % args.print_every) == 0:
+                    logging.info('KG Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch_kg, time() - time2, kg_batch_loss.item(), total_kg_loss / iter))
+                
+            logging.info('KG Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch_kg, time() - time1, total_kg_loss / n_batch_kg))
+
+            time3 = time()
+            total_cf_loss = 0
+            n_batch_cf = data.n_cf_train // data.cf_batch_size + 1
+
+            for iter in range(1, n_batch_cf + 1):
+                time4 = time()
+                cf_batch_user, cf_batch_pos_item, cf_batch_neg_item = data.generate_cf_batch(data.train_user_dict, data.cf_batch_size)
+
+                cf_batch_user = cf_batch_user.to(device)
+                cf_batch_pos_item = cf_batch_pos_item.to(device)
+                cf_batch_neg_item = cf_batch_neg_item.to(device)
+
+                cf_batch_loss = model(cf_batch_user, cf_batch_pos_item, cf_batch_neg_item, is_train=True, mode='CF')
+
+                if np.isnan(cf_batch_loss.cpu().detach().numpy()):
+                    logging.info('ERROR: Epoch {:04d} Iter {:04d} / {:04d} Loss is nan.'.format(epoch, iter, n_batch_cf))
+                    sys.exit()
+
+                cf_batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                total_cf_loss += cf_batch_loss.item()
+
+                if (iter % args.print_every) == 0:
+                    logging.info('CF Training: Epoch {:04d} Iter {:04d} / {:04d} | Time {:.1f}s | Iter Loss {:.4f} | Iter Mean Loss {:.4f}'.format(epoch, iter, n_batch_cf, time() - time4, cf_batch_loss.item(), total_cf_loss / iter))
+            
+            logging.info('CF Training: Epoch {:04d} Total Iter {:04d} | Total Time {:.1f}s | Iter Mean Loss {:.4f}'.format(epoch, n_batch_cf, time() - time3, total_cf_loss / n_batch_cf))
+```
+
+采用相加的融合方式以及默认参数，运行结果如下：
+![alt text](./output_images/image.png)
+| Recall@5 | NDCG@5 | Recall@10 | NDCG@10 |
+| -------- | ------ | --------- | ------- |
+| 0.0672   | 0.3112 | 0.1159    | 0.2871  |
+
+- 结果分析：与多任务优化相比，并没有明显提升，其中`NDCG@10`指标甚至有轻微下降。
+- 可能原因：知识图谱融合方式不合理，导致采用迭代优化也不能合理使用知识图谱中的信息，此外，迭代学习权重的设置可能导致不能有效地结合不同任务之间的关联，从而泛化能力可能有所下降，导致`NDCG@10`指标下降。
