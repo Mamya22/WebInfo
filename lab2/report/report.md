@@ -18,15 +18,123 @@
 + 组员：马筱雅 PB22111639
 + 组员：陈昕琪 PB22111711
 
+### 代码目录
+```
+├─baseline              //实验框架
+├─data
+│  │  KGfilter1.txt		//过滤后的一跳子图
+│  │  KGpath1.txt.gz	//未过滤的一跳子图
+│  │  douban2fb.txt  	//基础数据
+│  │  entity2id.txt 	//实体的 ID 映射
+│  │  movie_id_map.txt	//基础数据
+|  |  relation2id.txt   //关系的 ID 映射
+├─model_result_pic      //可视化模型结果
+│  │  dim_pic.py		
+│  │  lr_l2_pic.py		
+├─report
+│  │  output_images		
+│  │  report.md		    
+│  │  report.pdf		//实验报告
+├─Extract.py            //提取实体集合
+├─Filter.py             //过滤实体和关系集合
+├─FilterKG2.py          //过滤二跳子图
+├─GenKG1.py             //提取和过滤一跳子图
+├─GenKG2.py             //提取二跳子图
+├─README.md
+└─gen_id_map.py         //
+```
+
 ## 实验内容
 
 
 ### 1. 根据实验一中提供的电影 ID 列表，匹配获得 Freebase 中对应的实体
++ 从 ./data/douban2fb.txt 文件中提取实体并格式化
+```python
+def ExtractId2Entity(douban2fb_path):
+    entities_set = set()
+    with open(douban2fb_path, 'r') as f:
+        for i in f.readlines():
+            entity = i.strip().split()[1]
+            entities_set.add("<http://rdf.freebase.com/ns/{}>".format(entity))
+    return entities_set
+```
 
-### 2. 以 578 个可匹配实体为起点，通过三元组关联，提取一跳可达的全部实体，以形成新的起点集合。
+### 2. 以 578 个可匹配实体为起点，通过三元组关联，提取一跳可达的全部实体，以形成新的起点集合。可重复若干次该步骤。
+
+#### （1）提取一跳可达的全部实体
++ 如果头实体或尾实体属于电影实体，则提取该三元组。提取完所有的三元组后，通过这些三元组，提取一跳可达的实体集合和关系集合。
+
+```python
+# 从 Freebase 数据集中提取与给定实体集合相关的三元组，并将其写入到 KG_path 中
+def ExtractFreebase(freebase_path, KG_path, entities_set):
+    with gzip.open(freebase_path, 'rb') as f:
+        with open(KG_path, 'w', encoding='utf-8') as f_out:
+            for line in f:
+                line = line.strip()
+                triplet = line.decode().split('\t')[:3]
+                if triplet[0] in entities_set or triplet[2] in entities_set:
+                    f_out.write('\t'.join(triplet) + '\n')
+
+#从给定的三元组列表中提取实体和关系集合
+def ExtractList2Entity(triple_list):
+    entities_set = set()
+    relation_set = set()
+    for triplet in triple_list:
+        entities_set.add(triplet[0])
+        entities_set.add(triplet[2])
+        relation_set.add(triplet[1])
+    return entities_set, relation_set
+```
+
+#### （2）过滤一跳可达的实体和关系集合
++ 筛选出头实体和尾实体都以 <http://rdf.freebase.com/ns/ 开头的三元组。
+```python
+def __filter_prefix(self):
+    prefix = '<http://rdf.freebase.com/ns/'
+    triple_list_filter_prefix = [triplet for triplet in self.triple_list if
+                                    triplet[0].startswith(prefix) and triplet[2].startswith(prefix)]
+    return triple_list_filter_prefix
+```
+
++ 根据实体和关系出现次数的指定范围过滤三元组。
+```python
+def __filter_entities(self):
+    triple_list_filter_entities = []
+    for triplet in self.triple_list:
+        if (self.entities_min <= self.entities_count[triplet[0]] <= self.entities_max) and (
+                self.entities_min <= self.entities_count[triplet[2]] <= self.entities_max):
+            triple_list_filter_entities.append(triplet)
+    return triple_list_filter_entities
+
+def __filter_relations(self):
+    triple_filter_relation = [triplet for triplet in self.triple_list if
+                                self.relation_count[triplet[1]] >= self.relation_min]
+    return triple_filter_relation
+```
+
+#### （3）两跳可达的实体和关系集合
++ 以一跳可达的实体集合为起点，重复提取步骤，得到两跳可达的实体和关系集合。再按上述方法过滤。
++ 由于数据量过大，后续实验使用一跳子图。
 
 
 ### 3. 将电影实体ID映射到指定范围
++ 先获取movie_id_map.txt中电影的 Douban ID 映射值，格式化后存到字典entity2id中，然后根据要求处理实体和关系的映射，即将电影实体的 ID 映射到[0, num of movies)范围内，将图谱中的其余实体映射到[num of movies, num of entities)范围内，将关系映射到[0, num of relations)范围内。
+```python
+entities2id = {}
+num_of_entities = 578
+for entity in entities:
+    if entity in entity2id.keys():# 将电影实体的 ID 映射到[0, num of movies)范围内
+        entities2id[entity] = entity2id[entity]
+    else:# 将图谱中的其余实体映射到[num of movies, num of entities)范围内
+        entities2id[entity] = str(num_of_entities)
+        num_of_entities += 1
+
+num_of_relations = 0
+relations2id = {}
+for relation in relations:#将关系映射到[0, num of relations)范围内
+    relations2id[relation] = str(num_of_relations)
+    num_of_relations += 1
+```
 
 ### 4. 不同的设计的图谱嵌入方法对知识感知推荐性能的影响
 
@@ -399,11 +507,11 @@ endlocal
 
 实验输出的数据较为复杂，综合分析，较低的学习率（1e-4）配合适当的正则化参数（例如 1e-3 或 2e-4）可以提供较好的性能，避免过拟合，同时确保模型充分学习训练数据中的复杂关系。中等学习率（1e-3）也可以提供较好的性能，但可能还需要仔细调节正则化参数以防止过拟合才能达到较好的效果。
 
-### 5 选做1，使用迭代优化方式
+### 6. 【选做】将多任务方式更改为迭代优化方式
 
-#### 5.1 代码调整
-- 增加参数`--train_mode`，以便于选择优化方式，`multi-task`为多任务优化，`iter-task`为迭代优化
-- 迭代优化实现：迭代优化则需要分开计算出`kg`的损失函数和`cf`的损失函数，分别用两种方式对模型进行训练，在一次`epoch`中，两种模型交替进行，则修改训练文件，添加代码如下
+- 代码调整
+  - 增加参数`--train_mode`，以便于选择优化方式，`multi-task`为多任务优化，`iter-task`为迭代优化
+  - 迭代优化实现：迭代优化则需要分开计算出`kg`的损失函数和`cf`的损失函数，分别用两种方式对模型进行训练，在一次`epoch`中，两种模型交替进行，则修改训练文件，添加代码如下
 ```PYTHON
 for epoch in range(1, args.n_epoch + 1):
             model.train()
