@@ -238,7 +238,8 @@ endlocal
         <td ><center><img src="./output_images/Recall_at_5.png" ></center></td>
         <td ><center><img src="./output_images/NDCG_at_5.png"  ></center></td>
     </tr>
-
+</table>
+<table>
     <tr>
         <td><center><img src="./output_images/Recall_at_10.png" ></center></td>
         <td ><center><img src="./output_images/NDCG_at_10.png"  ></center> </td>
@@ -336,7 +337,8 @@ endlocal
         <td ><center><img src="./output_images/Recall@5_lr_l2.png" ></center></td>
         <td ><center><img src="./output_images/NDCG@5_lr_l2.png"  ></center></td>
     </tr>
-
+</table>
+<table>
     <tr>
         <td><center><img src="./output_images/Recall@10_lr_l2.png" ></center></td>
         <td ><center><img src="./output_images/NDCG@10_lr_l2.png"  ></center> </td>
