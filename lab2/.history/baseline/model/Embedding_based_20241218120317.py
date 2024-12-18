@@ -126,11 +126,11 @@ class Embedding_based(nn.Module):
         item_neg_kg_embed = self.entity_embed(item_neg_ids)                             # (cf_batch_size, embed_dim)
         
         # 8. 为 物品嵌入 注入 实体嵌入的语义信息
-        item_pos_cf_embed =       item_pos_embed * item_pos_kg_embed                                                      # (cf_batch_size, embed_dim)
-        item_neg_cf_embed =           item_neg_embed * item_neg_kg_embed                                              # (cf_batch_size, embed_dim)
+        # item_pos_cf_embed =       item_pos_embed * item_pos_kg_embed                                                      # (cf_batch_size, embed_dim)
+        # item_neg_cf_embed =           item_neg_embed * item_neg_kg_embed                                              # (cf_batch_size, embed_dim)
 
-        # item_pos_cf_embed =       item_pos_embed + item_pos_kg_embed                                                      # (cf_batch_size, embed_dim)
-        # item_neg_cf_embed =           item_neg_embed + item_neg_kg_embed
+        item_pos_cf_embed =       item_pos_embed + item_pos_kg_embed                                                      # (cf_batch_size, embed_dim)
+        item_neg_cf_embed =           item_neg_embed + item_neg_kg_embed
 
         pos_score = torch.sum(user_embed * item_pos_cf_embed, dim=1)                    # (cf_batch_size)
         neg_score = torch.sum(user_embed * item_neg_cf_embed, dim=1)                    # (cf_batch_size)

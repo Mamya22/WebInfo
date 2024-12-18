@@ -40,6 +40,29 @@ class DataLoader(DataLoaderBase):
         new_kg_data['r'] = new_kg_data['r'] + n_relations
         self.kg_data = pd.concat([kg_data, new_kg_data], axis=0, ignore_index=True)
 
+        
+
+        # # 交换header和tail
+        # new_kg_data = new_kg_data.rename({'h': 't', 't': 'h'}, axis='columns')
+        # # 更新关系
+        # new_kg_data['r'] = new_kg_data['r'] + n_relations
+
+        # self.kg_data = pd.concat([kg_data, new_kg_data], axis=0, ignore_index=True)
+
+        # # 确保所有数据都是数值类型
+        # self.kg_data['h'] = pd.to_numeric(self.kg_data['h'], errors='coerce')
+        # self.kg_data['t'] = pd.to_numeric(self.kg_data['t'], errors='coerce')
+
+        # # 处理缺失值和非数值类型
+        # if self.kg_data['h'].isnull().any() or self.kg_data['t'].isnull().any():
+        #     print("self.kg_data['h'] or self.kg_data['t'] contains NaN values after conversion to numeric")
+        #     raise ValueError("self.kg_data['h'] or self.kg_data['t'] contains NaN values after conversion to numeric")
+        # self.kg_data['h'].fillna(-1, inplace=True)
+        # self.kg_data['t'].fillna(-1, inplace=True)
+
+        # # 检查数据类型，确保没有字符串类型的存在
+        # print("Checking data types of 'h' and 't' columns:")
+        # print(self.kg_data.dtypes)
 
         # 2. 计算关系数，实体数和三元组的数量
         self.n_relations = max(self.kg_data['r']) + 1
