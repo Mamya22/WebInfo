@@ -1,3 +1,5 @@
+import faiss
+import pickle
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
@@ -33,8 +35,16 @@ embeddings = HuggingFaceBgeEmbeddings(model_name="./model")
 
 #数据入库
 db = FAISS.from_documents(texts, embeddings)
+faiss_index_path = "./data/faiss_index.faiss"
+faiss.write_index(db.index, faiss_index_path)
+print("数据入库完成")
 
 # query = "业务范围"
 query = "个人独资企业"
 docs = db.similarity_search(query)
 print(docs[0].page_content)
+
+with open("./data/faiss_db.pkl", "wb") as f:
+    pickle.dump(db, f)
+
+print("数据保存完成")
