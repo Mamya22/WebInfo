@@ -20,7 +20,26 @@
 
 ### 代码目录
 ```
-
+lab3/
+│
+├── data/
+│   ├── faiss_db.pkl			// faiss向量数据
+│   ├── faiss_index.faiss		// faiss向量数据索引
+│   ├── law_data_3k_gbk.csv		// gbk编码数据
+│   └── law_data_3k.csv			// 原始数据
+│
+├── model/						// m3e-base模型
+├── report/						// 实验报告
+├── data_preprocess.py			// 数据处理
+├── Qwen_COT.py					// COT选做
+├── Qwen_without_rag.py			// 不加入rag的Qwen模型
+├── Qwen.py						// 加入rag的Qwen模型
+├── search.py					// 数据检索
+├── tyqw_max_latest_without_rag.py				// 不加入rag的通义千问-max-latest模型
+├── tyqw_max_latest.py							// 加入rag的通义千问-max-latest模型
+├── tyqw_max_without_rag.py						// 不加入rag的通义千问-max模型
+├── tyqw_max.py									// 加入rag的通义千问-max模型
+└── README.md
 ```
 
 ## 实验内容
@@ -29,14 +48,14 @@
 ### 1. 数据准备阶段
 主要是将私域数据向量化后构建索引并存入数据库的过程，主要包括：数据提取、文本分割、向量化、数据入库等环节。
 
-+ 把csv文集转换成gbk编码后，使用 langchain.document_loaders 中的 CSVLoader 加载数据。
++ 把`csv`文集转换成gbk编码后，使用` langchain.document_loaders `中的 `CSVLoader `加载数据。
 ```python
 file_path = "./data/law_data_3k_gbk.csv"#gbk编码
 loader = CSVLoader(file_path=file_path)
 data = loader.load()
 ```
 
-+ 使用 CharacterTextSplitter 对数据进行文本分割
++ 使用` CharacterTextSplitter `对数据进行文本分割
 ```python
 text_splitter = CharacterTextSplitter(
     separator="\n\n",
@@ -48,16 +67,31 @@ text_splitter = CharacterTextSplitter(
 texts = text_splitter.split_documents(data)
 ```
 
-+ 使用m3e-base模型对文本向量化，加载模型
++ 使用`m3e-base`模型对文本向量化，加载模型
 ```python
 embeddings = HuggingFaceBgeEmbeddings(model_name="./model")
 ```
 
-+ 数据向量化后构建索引，并写入数据库FAISS
++ 数据向量化后构建索引，并写入数据库`FAISS`
 ```python
 db = FAISS.from_documents(texts, embeddings)
 ```
++ 使用 `faiss.write_index` 方法将索引写入指定文件中，避免重复调用
+
+```
+faiss_index_path = "./data/faiss_index.faiss"
+faiss.write_index(db.index, faiss_index_path)
+```
+
++ 保存数据，以二进制写模式，使用 `pickle.dump` 方法将 `db` 对象保存到文件中，后期索引可以直接调用文件读取内容
+
+```
+with open("./data/faiss_db.pkl", "wb") as f:
+	pickle.dump(db, f)
+```
+
 ### 2. 数据检索阶段
+
 #### 2.1 具体步骤
 - 根据向量相似度，首先向量化提问，检索出与提问最相关的知识
 ```python
@@ -132,6 +166,7 @@ answer = llm_chain.run(question=query, context=context)
 **无RAG**
 ![alt text](<屏幕截图 2025-01-16 164306.png>)
 在该问题中，使用`RAG`的检索结果根据已有专业知识库，检索出相关法律法规，以此为依据得出可能的处理结果。而未使用`RAG`的问答结果更为全面，包含处理的整个流程，并给出可能的反驳思路（被告可能的抗辩理由），最终得到结果。
+
 #### 2.3 引入 RAG 前后大模型在专业搜索上的区别
 通过以上4个案例及其问答结果对比，可以得到引入`RAG`前后大模型在专业搜索上的区别如下：
 - `RAG`方式进行检索的结果更专业可靠。`RAG`方式对专业知识库进行检索，引入`RAG`后可以获得更专业、更可靠的知识来源，有更具体的知识来源，如在问题4中给出了多条《消费者权益保护法》的相关条例，结果更加可信。
@@ -151,6 +186,38 @@ answer = llm_chain.run(question=query, context=context)
 - **检索结果的可解释性不同。** 对于普通检索，依赖于匹配等方式，检索结果与问题的关联度容易看出。而`RAG`检索经过了语义的推理及上下文的延伸等，可能返回的结果无法直接体现和查询的重合程度。
 
 - **检索的复杂度不同。** `RAG`检索加上了语义的推理，检索过程更复杂。
+
+#### 2.4其他模型
+
+在阿里云网站，除`Qwen`外还有其他的文字类语言模型，我们也尝试了通义千问-max和通义千问-max-latest这两种模型。这里仅针对问题四，分别对于加入`rag`和不加`rag`进行比较。
+
+##### 通义千问-max
+
+**RAG**
+
+![](tyqw_max.png)
+
+**无RAG**
+
+![](tyqw_max_without_rag.png)
+
+##### 通义千问-max-latest
+
+**RAG**
+
+![](tyqw_max_latest.png)
+
+**无RAG**
+
+![](tyqw_max_latest_without_rag.png)
+
+**比较结果**
+
+加入rag后，可以感觉到回答中明显引用了更多相关的法律条文，推测是`rag`引入的`prompt`给结果提供了更多的依据。内容更加详细，并且给出了清晰的判决建议，也考虑了被告可能的辩护理由。
+
+而对于没有加入rag的模型，是依靠自身的相关数据库来回答问题的，对于法律条文引用的不多，对于每条条文的适用情况解释不多。虽然给出了初步结论，但没有明确的判决建议和被告责任的详细分析。
+
+总结来看，加入`rag`给语言模型提供了更多的相关依据和解决方案参考，对于同一问题，加入`rag`的模型可以更详细，清晰的给出回答。
 
 ### 3 选做 COT
 `COT`让大模型逐步参与将一个复杂问题分解为一步一步的子问题并依次进行求解，在本次实验中，`CoT`与`RAG`结合，通过专业知识检索及其思路分解来让`LLM`生成回答。主要回答思路为**分析问题，分析检索知识（上下文），知识推理，生成回答**。通过修改`prompt`来达到目的。`prompt`修改为如下：
