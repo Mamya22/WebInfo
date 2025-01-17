@@ -7,7 +7,8 @@ from langchain.schema import HumanMessage, AIMessage
 from langchain_community.llms import Tongyi
 from langchain.chains import LLMChain
 import os
-
+from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.output_parser import StrOutputParser
 # 配置API Key
 DASHSCOPE_API_KEY = "sk-2a1edd2f72954a7c8775fde803a7d610"
 os.environ["DASHSCOPE_API_KEY"] = DASHSCOPE_API_KEY
@@ -38,7 +39,7 @@ Answer:
 prompt = ChatPromptTemplate.from_template(template=template)
 
 # 创建LLM链
-llm_chain = LLMChain(prompt=prompt, llm=llm)
+# llm_chain = LLMChain(prompt=prompt, llm=llm)
 
 # 循环提问直到输入 "exit"
 while True:
@@ -49,16 +50,26 @@ while True:
     if query.lower() == "exit":
         print("程序已退出")
         break
-
+    retriever = db.as_retriever()
+    # 整合检索结果以生成回答
+    # context = "\n".join([doc.page_content for doc in docs])
+    # answer = llm_chain.run(question=query, context=context)
+    rag_chain = (
+    {"context": retriever,  "question": RunnablePassthrough()} 
+    | prompt 
+    | llm
+    | StrOutputParser() 
+    )
+    answer = rag_chain.invoke(query)
     # 将用户的提问向量化
-    query_vector = embeddings.embed_query(query)
+    # query_vector = embeddings.embed_query(query)
 
     # 使用加载的 `db` 对象进行相似性检索
-    docs = db.similarity_search_by_vector(query_vector)
+    # docs = db.similarity_search_by_vector(query_vector)
 
     # 整合检索结果以生成回答
-    context = "\n".join([doc.page_content for doc in docs])
-    answer = llm_chain.run(question=query, context=context)
+    # context = "\n".join([doc.page_content for doc in docs])
+    # answer = llm_chain.run(question=query, context=context)
     # print(template.format(question=query, context=context, answer=answer))
     print(answer)
     print("*" * 50)
