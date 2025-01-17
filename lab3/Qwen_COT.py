@@ -9,7 +9,8 @@ from langchain.schema import HumanMessage, AIMessage
 from langchain_community.llms import Tongyi
 from langchain.chains import LLMChain
 import os
-
+from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.output_parser import StrOutputParser
 # 配置API Key
 DASHSCOPE_API_KEY = "sk-2a1edd2f72954a7c8775fde803a7d610"
 os.environ["DASHSCOPE_API_KEY"] = DASHSCOPE_API_KEY
