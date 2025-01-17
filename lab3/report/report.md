@@ -86,6 +86,20 @@ llm_chain = LLMChain(prompt=prompt, llm=llm)
 context = "\n".join([doc.page_content for doc in docs])
 answer = llm_chain.run(question=query, context=context)
 ```
+**考虑到以上方法可能会在新版本被删除。所以采用新的替换函数。如下：**
+```python
+    retriever = db.as_retriever()
+    # 整合检索结果以生成回答
+    # context = "\n".join([doc.page_content for doc in docs])
+    # answer = llm_chain.run(question=query, context=context)
+    rag_chain = (
+    {"context": retriever,  "question": RunnablePassthrough()} 
+    | prompt 
+    | llm
+    | StrOutputParser() 
+    )
+    answer = rag_chain.invoke(query)
+```
 
 #### 2.2 问题检索
 
