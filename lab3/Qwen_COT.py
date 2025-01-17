@@ -51,7 +51,7 @@ Answer:
 prompt = ChatPromptTemplate.from_template(template=template)
 
 # 创建LLM链
-llm_chain = LLMChain(prompt=prompt, llm=llm)
+# llm_chain = LLMChain(prompt=prompt, llm=llm)
 
 # 循环提问直到输入 "exit"
 while True:
@@ -64,14 +64,24 @@ while True:
         break
 
     # 将用户的提问向量化
-    query_vector = embeddings.embed_query(query)
+    # query_vector = embeddings.embed_query(query)
 
     # 使用加载的 `db` 对象进行相似性检索
-    docs = db.similarity_search_by_vector(query_vector)
-    
+    # docs = db.similarity_search_by_vector(query_vector)
+    retriever = db.as_retriever()
     # 整合检索结果以生成回答
-    context = "\n".join([doc.page_content for doc in docs])
-    answer = llm_chain.run(question=query, context=context)
+    # context = "\n".join([doc.page_content for doc in docs])
+    # answer = llm_chain.run(question=query, context=context)
+    rag_chain = (
+    {"context": retriever,  "question": RunnablePassthrough()} 
+    | prompt 
+    | llm
+    | StrOutputParser() 
+    )
+    answer = rag_chain.invoke(query)
+    # 整合检索结果以生成回答
+    # context = "\n".join([doc.page_content for doc in docs])
+    # answer = llm_chain.run(question=query, context=context)
     # print(template.format(question=query, context=context, answer=answer))
     print(answer)
     print("*" * 50)
